@@ -4,7 +4,7 @@ with open("README.md", "r", encoding='utf8') as fh:
     long_description = fh.read()
 
 install_requires = [
-    "onnxruntime<=1.21.0"
+    "onnxruntime<=1.21.0",
     "pillow<=11.1.0",
     "fastapi<=0.115.11",
     "uvicorn<=0.34.0",
