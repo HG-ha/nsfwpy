@@ -6,4 +6,4 @@ NSFW = NSFWDetectorONNX
 # 导出用于命令行工具的主入口点
 from .server import main as cli_main
 
-__version__ = "0.0.2"
+__version__ = "0.0.2v1"

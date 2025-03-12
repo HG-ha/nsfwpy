@@ -5,12 +5,12 @@ with open("README.md", "r", encoding='utf8') as fh:
     long_description = fh.read()
 
 install_requires = [
-    "numpy<=1.26.4",
+    "onnxruntime<=1.21.0"
     "pillow<=11.1.0",
     "fastapi<=0.115.11",
     "uvicorn<=0.34.0",
     "python-multipart<=0.0.20",
-    "onnxruntime<=1.21.0"
+    "numpy<=1.26.4",
 ]
 
 setuptools.setup(
@@ -26,6 +26,10 @@ setuptools.setup(
     install_requires=install_requires,
     classifiers=[
         "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10",
+        "Programming Language :: Python :: 3.11",
         "Operating System :: OS Independent",
     ],
     entry_points={
@@ -33,4 +37,5 @@ setuptools.setup(
             'nsfwpy=nsfwpy.server:main',
         ],
     },
+    python_requires='>=3.7',
 )
