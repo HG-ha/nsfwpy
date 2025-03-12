@@ -1,5 +1,5 @@
 import setuptools
-import platform
+from nsfwpy import __version__
 
 with open("README.md", "r", encoding='utf8') as fh:
     long_description = fh.read()
@@ -15,7 +15,7 @@ install_requires = [
 
 setuptools.setup(
     name="nsfwpy",
-    version="0.0.1",
+    version=__version__,
     author="YiMing",
     author_email="1790233968@qq.com",
     description="基于OpenNSFW的图像内容检测工具",

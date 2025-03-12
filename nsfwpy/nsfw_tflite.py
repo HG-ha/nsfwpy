@@ -13,7 +13,7 @@ class NSFWDetector:
     """NSFW内容检测器，基于MobileNet V2模型"""
     
     CATEGORIES = ['drawings', 'hentai', 'neutral', 'porn', 'sexy']
-    MODEL_URL = "https://ghproxy.cn/github.com/HG-ha/nsfwpy/raw/main/model/model.tflite"
+    MODEL_URL = "https://github.com/HG-ha/nsfwpy/raw/main/model/model.tflite"
     
     def __init__(self, model_path=None, image_dim=224):
         """

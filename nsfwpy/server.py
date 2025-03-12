@@ -21,10 +21,6 @@ def main():
     # 只在指定--web参数时启动API服务器
     if args.web:
         # 启动服务器
-        # 移除上传文件大小限制
-        from starlette.formparsers import MultiPartParser
-        MultiPartParser.max_part_size = 1024 * 1024 * 1024
-        MultiPartParser.max_file_size = 1024 * 1024 * 1024
         uvicorn.run("nsfwpy.api:app", host=args.host, port=args.port)
     else:
         # 运行命令行版本

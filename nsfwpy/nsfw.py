@@ -10,7 +10,7 @@ class NSFWDetectorONNX:
     """NSFW内容检测器，基于MobileNet V2模型的ONNX版本"""
     
     CATEGORIES = ['drawings', 'hentai', 'neutral', 'porn', 'sexy']
-    MODEL_URL = "https://ghproxy.cn/github.com/HG-ha/nsfwpy/raw/main/model/model.onnx"
+    MODEL_URL = "https://github.com/HG-ha/nsfwpy/raw/main/model/model.onnx"
     
     def __init__(self, model_path=None, image_dim=224):
         """
@@ -26,6 +26,7 @@ class NSFWDetectorONNX:
         env_model_path = os.environ.get("NSFW_ONNX_MODEL_PATH")
         if env_model_path and os.path.exists(env_model_path):
             model_path = env_model_path
+
         # 若未通过环境变量或参数提供模型路径，则自动获取
         elif model_path is None:
             model_path = self._get_model_path()
