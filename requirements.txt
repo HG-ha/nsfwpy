@@ -1,0 +1,7 @@
+https://ghproxy.cn/github.com/NexelOfficial/tflite-runtime-win/raw/main/win_amd64/tflite_runtime-2.13.0-cp311-cp311-win_amd64.whl; platform_system == "Windows"
+tflite-runtime>=2.5.0; platform_system != "Windows"
+numpy<=1.26.4
+pillow<=11.1.0
+fastapi<=0.115.11
+uvicorn<=0.34.0
+python-multipart<=0.0.20
