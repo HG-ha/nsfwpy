@@ -3,7 +3,7 @@ from pydantic import BaseModel
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from .nsfw import NSFWDetector
+from .nsfw import NSFWDetectorONNX
 
 # 全局模型实例
 global_detector = None
@@ -17,7 +17,7 @@ def get_detector(model_path=None):
         return global_detector
     
     # 创建新的检测器实例
-    detector = NSFWDetector(model_path=model_path)
+    detector = NSFWDetectorONNX(model_path=model_path)
     
     # 保存为全局实例
     global_detector = detector

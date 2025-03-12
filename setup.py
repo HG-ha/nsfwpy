@@ -9,17 +9,9 @@ install_requires = [
     "pillow<=11.1.0",
     "fastapi<=0.115.11",
     "uvicorn<=0.34.0",
-    "python-multipart<=0.0.20"
+    "python-multipart<=0.0.20",
+    "onnxruntime<=1.21.0"
 ]
-
-if platform.system() == "Windows":
-    dependency_links = [
-        "https://ghproxy.cn/github.com/NexelOfficial/tflite-runtime-win/raw/main/win_amd64/tflite_runtime-2.13.0-cp311-cp311-win_amd64.whl"
-    ]
-    install_requires.append("tflite-runtime==2.13.0")
-else:
-    dependency_links = []
-    install_requires.append("tflite-runtime>=2.5.0")
 
 setuptools.setup(
     name="nsfwpy",
@@ -32,7 +24,6 @@ setuptools.setup(
     url="https://github.com/HG-ha/nsfwpy",
     packages=setuptools.find_packages(),
     install_requires=install_requires,
-    dependency_links=dependency_links,
     classifiers=[
         "Programming Language :: Python :: 3.7",
         "Operating System :: OS Independent",

@@ -1,29 +1,29 @@
 import os
 import numpy as np
 from PIL import Image
-import tflite_runtime.interpreter as tflite
+import onnxruntime as ort
 import io
 import platform
 import urllib.request
 
-class NSFWDetector:
-    """NSFW内容检测器，基于MobileNet V2模型"""
+class NSFWDetectorONNX:
+    """NSFW内容检测器，基于MobileNet V2模型的ONNX版本"""
     
     CATEGORIES = ['drawings', 'hentai', 'neutral', 'porn', 'sexy']
-    MODEL_URL = "https://ghproxy.cn/github.com/HG-ha/nsfwpy/raw/main/model/model.tflite"
+    MODEL_URL = "https://ghproxy.cn/github.com/HG-ha/nsfwpy/raw/main/model/model.onnx"
     
     def __init__(self, model_path=None, image_dim=224):
         """
-        初始化NSFW检测器
+        初始化NSFW检测器(ONNX版本)
         
         参数:
-            model_path: TFLite模型文件路径，若未提供则自动从缓存或网络获取
+            model_path: ONNX模型文件路径，若未提供则自动从缓存或网络获取
             image_dim: 模型输入图像尺寸(默认224x224)
         """
         self.image_dim = image_dim
         
         # 优先检查环境变量中是否设置了模型路径
-        env_model_path = os.environ.get("NSFW_MODEL_PATH")
+        env_model_path = os.environ.get("NSFW_ONNX_MODEL_PATH")
         if env_model_path and os.path.exists(env_model_path):
             model_path = env_model_path
         # 若未通过环境变量或参数提供模型路径，则自动获取
@@ -35,22 +35,20 @@ class NSFWDetector:
             
         self.model_path = model_path
         
-        # 加载TFLite模型
-        self.interpreter = tflite.Interpreter(model_path=model_path)
-        self.interpreter.allocate_tensors()
+        # 创建ONNX运行时会话
+        self.session = ort.InferenceSession(model_path)
         
-        # 获取输入输出细节
-        self.input_details = self.interpreter.get_input_details()
-        self.output_details = self.interpreter.get_output_details()
-    
+        # 获取输入名称
+        self.input_name = self.session.get_inputs()[0].name
+
     def _get_model_path(self):
         """根据平台获取缓存路径，检查模型文件是否存在，不存在则下载"""
         # 首先检查环境变量
-        env_model_path = os.environ.get("NSFW_MODEL_PATH")
+        env_model_path = os.environ.get("NSFW_ONNX_MODEL_PATH")
         if env_model_path:
-            # 如果环境变量指定的是目录而非文件，则在目录下查找model.tflite
+            # 如果环境变量指定的是目录而非文件，则在目录下查找model.onnx
             if os.path.isdir(env_model_path):
-                model_path = os.path.join(env_model_path, "model.tflite")
+                model_path = os.path.join(env_model_path, "model.onnx")
             else:
                 model_path = env_model_path
                 
@@ -69,10 +67,10 @@ class NSFWDetector:
         # 确保目录存在
         os.makedirs(cache_dir, exist_ok=True)
         
-        model_path = os.path.join(cache_dir, "model.tflite")
+        model_path = os.path.join(cache_dir, "model.onnx")
         # 检查模型文件是否存在，不存在则下载
         if not os.path.exists(model_path):
-            print(f"模型文件不存在，正在下载到 {model_path}...")
+            print(f"ONNX模型文件不存在，正在下载到 {model_path}...")
             try:
                 self._download_file(self.MODEL_URL, model_path)
                 print("模型下载完成")
@@ -97,7 +95,10 @@ class NSFWDetector:
             if image.mode != 'RGB':
                 image = image.convert('RGB')
             image = image.resize((self.image_dim, self.image_dim), Image.NEAREST)
+            # 将图像转换为NumPy数组并归一化
             image = np.array(image, dtype=np.float32) / 255.0
+            # 将维度从 (H,W,C) 调整为 (N,H,W,C)
+            image = np.expand_dims(image, axis=0)
             return image
         except Exception as ex:
             print(f"处理图像出错 {image_path}: {ex}")
@@ -109,7 +110,10 @@ class NSFWDetector:
             if pil_image.mode != 'RGB':
                 pil_image = pil_image.convert('RGB')
             resized_image = pil_image.resize((self.image_dim, self.image_dim), Image.NEAREST)
+            # 将图像转换为NumPy数组并归一化
             image = np.array(resized_image, dtype=np.float32) / 255.0
+            # 将维度从 (H,W,C) 调整为 (N,H,W,C)
+            image = np.expand_dims(image, axis=0)
             return image
         except Exception as ex:
             print(f"处理PIL图像出错: {ex}")
@@ -117,9 +121,9 @@ class NSFWDetector:
     
     def _predict_single(self, image):
         """对单个图像进行预测"""
-        self.interpreter.set_tensor(self.input_details[0]['index'], np.expand_dims(image, axis=0))
-        self.interpreter.invoke()
-        return self.interpreter.get_tensor(self.output_details[0]['index'])[0]
+        # 使用ONNX运行时进行推理
+        outputs = self.session.run(None, {self.input_name: image})
+        return outputs[0][0]  # 获取第一个输出的第一个批次结果
     
     def _format_predictions(self, predictions):
         """将预测结果格式化为类别和概率"""
