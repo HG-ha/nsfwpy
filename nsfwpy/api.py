@@ -2,7 +2,7 @@ from typing import List, Dict
 from pydantic import BaseModel
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-
+from . import __version__ as version
 from .nsfw import NSFWDetectorONNX
 
 # 全局模型实例
@@ -31,18 +31,12 @@ class ClassifyItem(BaseModel):
 class ClassifyManyItem(BaseModel):
     images: List[UploadFile] = File(..., description="上传的图像文件列表")
 
-# 将响应模型直接定义为分类结果字典
-class ClassificationResult(Dict[str, float]):
-    pass
-
-class MultipleClassificationResult(BaseModel):
-    results: List[Dict[str, float]]
 
 # 创建FastAPI应用
 app = FastAPI(
     title="NSFW内容检测API",
-    description="基于MobileNet V2的NSFW内容检测API，兼容nsfwjs接口",
-    version="1.0.0"
+    description="基于onnx的NSFW内容检测API，兼容nsfwjs接口",
+    version=version
 )
 
 
@@ -79,11 +73,18 @@ async def classify_image(image: UploadFile = File(...)):
         image_bytes = await read_image_file(image)
         result = detector.predict_from_bytes(image_bytes)
         
+        # 立即关闭文件
+        await image.close()
+        # 清理内存
+        del image_bytes
+
         if not result:
             raise HTTPException(status_code=500, detail="图像处理失败")
             
         return result
     except Exception as e:
+        if image:
+            await image.close()
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/classify-many", response_model=List[Dict[str, float]])
@@ -99,11 +100,19 @@ async def classify_many_images(images: List[UploadFile] = File(...)):
             try:
                 image_bytes = await read_image_file(image)
                 result = detector.predict_from_bytes(image_bytes)
+
+                # 立即关闭文件
+                await image.close()
+                # 清理内存
+                del image_bytes
+
                 if result:
                     results.append(result)
                 else:
                     results.append({"error": "处理失败"})
             except Exception as e:
+                if image:
+                    await image.close()
                 results.append({"error": str(e)})
                 
         return results

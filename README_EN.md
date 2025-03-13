@@ -2,103 +2,114 @@
 
 English | [简体中文](README.md)
 
-A Python tool for NSFW (Not Safe For Work) content detection, providing an easy-to-use Python interface for image content analysis and filtering, with both API and CLI tools.
-
-## Introduction
-
-nsfwpy is a lightweight Python library that uses deep learning models for image content analysis to identify potentially inappropriate content. This project is based on the model provided by [nsfw_model](https://github.com/GantMan/nsfw_model).
+# nsfwpy
+A lightweight Python library for image content analysis using deep learning models to identify potentially inappropriate content.
 
 ## Features
 
 - Lightweight implementation with minimal dependencies
-- Support for various image formats (JPG, PNG, etc.)
+- Support for various image formats (almost all common formats)
 - Command-line tool, Python API, and HTTP API interfaces
-- Optimized performance using TensorFlow Lite
-- Cross-platform support (Windows and other operating systems)
+- Support for Windows and other operating systems
 - Automatic model download and caching
-
-## Requirements
-> Method compatibility is typically stable across major versions
-- Python 3.7+
-- NumPy <= 1.26.4
-- Pillow <= 11.1.0
-- FastAPI <= 0.115.11
-- uvicorn <= 0.34.0
-- python-multipart <= 0.0.20
-- tflite-runtime = 2.13.0 (Windows) or >= 2.5.0 (other systems)
+- Pre-compiled versions available
 
 ## Installation
 
-### Via pip
+- Via pip
 
-```bash
-pip install nsfwpy
-```
+    ```bash
+    pip install nsfwpy
+    ```
 
-### From Source
+- From Source
 
-```bash
-git clone https://github.com/HG-ha/nsfwpy.git
-cd nsfwpy
-pip install -e .
-```
+    ```bash
+    git clone https://github.com/HG-ha/nsfwpy.git
+    cd nsfwpy
+    pip install -e .
+    ```
+
+### Using Pre-compiled Versions
+- Download the pre-compiled version for your platform from [Release](https://github.com/HG-ha/nsfwpy/releases).
+- Windows: Enter `nsfwpy.exe` in cmd
+- Linux: `chmod +x nsfwpy && ./nsfwpy`
+
+### Building for Other Platforms
+- Refer to `build.bat | build.sh`
 
 ## Usage
 
-### Python API
+- Python API
 
-```python
-from nsfwpy import NSFW
+    ```python
+    from nsfwpy import NSFW
 
-# Initialize detector (model will be automatically downloaded on first run)
-detector = NSFW()
+    # Initialize detector (model will be automatically downloaded on first run)
+    detector = NSFW()
 
-# Predict single image
-result = detector.predict_image("path/to/image.jpg")
-print(result)
+    # Predict single image
+    result = detector.predict_image("path/to/image.jpg")
+    print(result)
 
-# Predict PIL image
-from PIL import Image
-img = Image.open("path/to/image.jpg")
-result = detector.predict_pil_image(img)
-print(result)
+    # Predict PIL image
+    from PIL import Image
+    img = Image.open("path/to/image.jpg")
+    result = detector.predict_pil_image(img)
+    print(result)
 
-# Batch predict images in directory
-results = detector.predict_batch("path/to/image/directory")
-print(results)
-```
+    # Batch predict images in directory
+    results = detector.predict_batch("path/to/image/directory")
+    print(results)
+    ```
 
-### Command Line Tool
+- Command Line Tool
 
-```bash
-# Basic usage
-nsfwpy --input path/to/image.jpg
+    ```bash
+    # Basic usage
+    nsfwpy --input path/to/image.jpg
 
-# Specify custom model path
-nsfwpy --model path/to/model.tflite --input path/to/image.jpg
+    # Specify custom model path
+    nsfwpy --model path/to/model.onnx --input path/to/image.jpg
 
-# Specify image dimension
-nsfwpy --dim 299 --input path/to/image.jpg
-```
+    # Specify image dimension (usually not needed as current model only supports 224)
+    nsfwpy --dim 299 --input path/to/image.jpg
+    ```
 
 ### Web API Service (Fully compatible with nsfwjs-api)
 
-Start the API server:
+- Start the API server:
 
-```bash
-# Basic usage
-nsfwpy -w
+    ```bash
+    # Basic usage
+    nsfwpy -w
 
-# Specify host and port
-nsfwpy -w --host 127.0.0.1 --port 8080
+    # Specify host and port
+    nsfwpy -w --host 127.0.0.1 --port 8080
 
-# Specify custom model
-nsfwpy -w --model path/to/model.tflite
-```
+    # Specify custom model
+    nsfwpy -w --model path/to/model.onnx
+    ```
 
-API Endpoints:
-- `POST /classify`: Analyze single image
-- `POST /classify-many`: Batch analyze multiple images
+- API Endpoints:
+    - `POST /classify`: Analyze single image
+    - `POST /classify-many`: Batch analyze multiple images
+
+- API Documentation:
+    - [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
+
+- Requests:
+    - /classify
+        ```
+        curl --location --request POST 'http://127.0.0.1:8000/classify' \
+        --form 'image=@"image.jpeg"'
+        ```
+    - /classify-many
+        ```
+        curl --location --request POST 'http://127.0.0.1:8000/classify-many' \
+        --form 'images=@"image.jpeg"' \
+        --form 'images=@"image2.jpeg"'
+        ```
 
 ### Prediction Result Format
 
@@ -113,16 +124,12 @@ Returns a dictionary containing probability values for each category:
 }
 ```
 
-## Development
-
-- Licensed under MIT
-- Issues and Pull Requests are welcome
-- Automatic PyPI deployment via GitHub Actions
-
 ## Acknowledgments
 
 The model used in this project is based on [nsfw_model](https://github.com/GantMan/nsfw_model). Thanks to the original authors for their contribution.
 
-## License
-
-[MIT License](LICENSE)
+### Recommended Resources
+1. Sirius Framework: <https://www.siriusbot.cn/>
+2. Mirror Core API: <https://api2.wer.plus/>
+3. LinFengCloud - Best Choice for Webmasters: <https://www.dkdun.cn/>
+4. ICP record inquiry: <https://icp.show/>
