@@ -3,14 +3,14 @@
 English | [简体中文](README.md)
 
 # nsfwpy
-A lightweight Python library for image content analysis using deep learning models to identify potentially inappropriate content.
+A lightweight Python library for image content analysis using deep learning models to detect inappropriate content in images.
 
 ## Features
 
-- Lightweight implementation with minimal dependencies
-- Support for various image formats (almost all common formats)
-- Command-line tool, Python API, and HTTP API interfaces
-- Support for Windows and other operating systems
+- Lightweight implementation with minimal dependencies, easy to deploy
+- Support for multiple image formats (almost all common formats)
+- Provides Command Line Tool, Python API, and HTTP API interfaces
+- Supports Windows and other operating systems
 - Automatic model download and caching
 - Pre-compiled versions available
 
@@ -22,20 +22,23 @@ A lightweight Python library for image content analysis using deep learning mode
     pip install nsfwpy
     ```
 
-- From Source
+- From source
 
     ```bash
     git clone https://github.com/HG-ha/nsfwpy.git
     cd nsfwpy
     pip install -e .
     ```
+    
+- Docker
+    - `docker run -p 8000:8000 yiminger/nsfwpy`
 
-### Using Pre-compiled Versions
-- Download the pre-compiled version for your platform from [Release](https://github.com/HG-ha/nsfwpy/releases).
-- Windows: Enter `nsfwpy.exe` in cmd
-- Linux: `chmod +x nsfwpy && ./nsfwpy`
+- Using pre-compiled version (ready to use)
+    - Please visit [Release](https://github.com/HG-ha/nsfwpy/releases) to download the pre-compiled version for your platform.
+    - Windows: Enter `nsfwpy.exe` in cmd
+    - Linux: `chmod +x nsfwpy && ./nsfwpy`
 
-### Building for Other Platforms
+### Building for other platforms
 - Refer to `build.bat | build.sh`
 
 ## Usage
@@ -45,7 +48,7 @@ A lightweight Python library for image content analysis using deep learning mode
     ```python
     from nsfwpy import NSFW
 
-    # Initialize detector (model will be automatically downloaded on first run)
+    # Initialize detector (first run will automatically download the model)
     detector = NSFW()
 
     # Predict single image
@@ -72,13 +75,13 @@ A lightweight Python library for image content analysis using deep learning mode
     # Specify custom model path
     nsfwpy --model path/to/model.onnx --input path/to/image.jpg
 
-    # Specify image dimension (usually not needed as current model only supports 224)
+    # Specify model image dimensions (usually not needed as current model only supports 224)
     nsfwpy --dim 299 --input path/to/image.jpg
     ```
 
 ### Web API Service (Fully compatible with nsfwjs-api)
 
-- Start the API server:
+- Start API server:
 
     ```bash
     # Basic usage
@@ -91,11 +94,11 @@ A lightweight Python library for image content analysis using deep learning mode
     nsfwpy -w --model path/to/model.onnx
     ```
 
-- API Endpoints:
+- API endpoints:
     - `POST /classify`: Analyze single image
     - `POST /classify-many`: Batch analyze multiple images
 
-- API Documentation:
+- API documentation:
     - [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
 - Requests:
@@ -113,23 +116,23 @@ A lightweight Python library for image content analysis using deep learning mode
 
 ### Prediction Result Format
 
-Returns a dictionary containing probability values for each category:
+Returns a dictionary with probability values for the following categories:
 ```python
 {
     "drawings": 0.1,    # Drawings/Animation
-    "hentai": 0.0,     # Anime adult content
-    "neutral": 0.8,    # Safe/Neutral content
-    "porn": 0.0,       # Adult content
+    "hentai": 0.0,     # Anime pornographic content
+    "neutral": 0.8,    # Neutral/Safe content
+    "porn": 0.0,       # Pornographic content
     "sexy": 0.1        # Suggestive content
 }
 ```
 
-## Acknowledgments
+## Acknowledgements
 
-The model used in this project is based on [nsfw_model](https://github.com/GantMan/nsfw_model). Thanks to the original authors for their contribution.
+The model in this project is based on [nsfw_model](https://github.com/GantMan/nsfw_model). Thanks to the original authors for their contribution.
 
 ### Recommended Resources
 1. Sirius Framework: <https://www.siriusbot.cn/>
 2. Mirror Core API: <https://api2.wer.plus/>
-3. LinFengCloud - Best Choice for Webmasters: <https://www.dkdun.cn/>
-4. ICP record inquiry: <https://icp.show/>
+3. Linfeng Cloud - Top Choice for Webmasters: <https://www.dkdun.cn/>
+4. ICP Registration Query: <https://icp.show/>

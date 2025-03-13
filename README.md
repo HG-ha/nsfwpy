@@ -1,6 +1,6 @@
 # nsfwpy
 
-[English](README_EN.md) | 简体中文
+[English](README_EN.md) | [简体中文](README.md)
 
 # nsfwpy
 一个轻量级Python库，使用深度学习模型进行图像内容分析，可以识别图像是否包含不适宜内容。
@@ -29,11 +29,14 @@
     cd nsfwpy
     pip install -e .
     ```
+    
+- Docker
+    - `docker run -p 8000:8000 yiminger/nsfwpy`
 
-### 使用预编译版本（开箱即用）
-- 请前往 [Release](https://github.com/HG-ha/nsfwpy/releases) 下载对应平台的预编译版本。
-- windows：在cmd中输入 `nsfwpy.exe`
-- linux：`chmod +x nsfwpy && ./nsfwpy`
+- 使用预编译版本（开箱即用）
+    - 请前往 [Release](https://github.com/HG-ha/nsfwpy/releases) 下载对应平台的预编译版本。
+    - windows：在cmd中输入 `nsfwpy.exe`
+    - linux：`chmod +x nsfwpy && ./nsfwpy`
 
 ### 编译其他平台版本
 - 参考 `build.bat | build.sh`
