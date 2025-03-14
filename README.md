@@ -1,5 +1,3 @@
-# nsfwpy
-
 [English](README_EN.md) | [简体中文](README.md)
 
 # nsfwpy
@@ -33,17 +31,17 @@
 - Docker（默认使用模型：model.onnx）
     - `docker run -p 8000:8000 yiminger/nsfwpy`
     - 使用指定模型启动
-        - 默认模型
+        - `d` 默认模型
             ```
-            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/model.onnx -p 8000:8000 nsfwpy
+            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/model.onnx -p 8000:8000 yiminger/nsfwpy
             ```
-        - m2模型（NSFWJS mobilenet_v2）
+        - `m2` 模型（NSFWJS mobilenet_v2）
             ```
-            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/m2model.onnx -p 8000:8000 nsfwpy
+            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/m2model.onnx -p 8000:8000 yiminger/nsfwpy
             ```
-        - i3模型（NSFWJS inception_v3），速度是其他模型的一半
+        - `i3` 模型（NSFWJS inception_v3），速度是其他模型的一半
             ```
-            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/i3model.onnx -p 8000:8000 nsfwpy
+            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/i3model.onnx -p 8000:8000 yiminger/nsfwpy
             ```
 
 - 使用预编译版本（开箱即用）
@@ -97,9 +95,20 @@
     # 指定自定义模型路径
     nsfwpy --model path/to/model.onnx --input path/to/image.jpg
 
-    # 指定模型需要的图像尺寸（通常用不到，因为目前模型只支持224，无需关注此参数）
-    nsfwpy --dim 299 --input path/to/image.jpg
+    # 指定模型类型 (d: 默认模型, m2: mobilenet_v2, i3: inception_v3)
+    nsfwpy --type m2 --input path/to/image.jpg
+
+    # 启动Web API服务
+    nsfwpy -w [--host 127.0.0.1] [--port 8080]
     ```
+
+命令行参数说明：
+- `--input`: 要检测的图像文件或目录路径
+- `--model`: 自定义模型文件路径（指定此参数时将忽略--type）
+- `--type`: 模型类型选择，可选值：d(默认), m2, i3
+- `-w, --web`: 启用Web API服务
+- `--host`: API服务器主机名（默认：0.0.0.0）
+- `--port`: API服务器端口（默认：8000）
 
 ### Web API服务（完全兼容 nsfwjs-api）
 
