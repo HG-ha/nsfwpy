@@ -30,8 +30,21 @@ A lightweight Python library for image content analysis using deep learning mode
     pip install -e .
     ```
     
-- Docker
+- Docker (Default model: model.onnx)
     - `docker run -p 8000:8000 yiminger/nsfwpy`
+    - Start with specific model:
+        - Default model
+            ```
+            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/model.onnx -p 8000:8000 nsfwpy
+            ```
+        - m2 model (NSFWJS mobilenet_v2)
+            ```
+            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/m2model.onnx -p 8000:8000 nsfwpy
+            ```
+        - i3 model (NSFWJS inception_v3)
+            ```
+            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/i3model.onnx -p 8000:8000 nsfwpy
+            ```
 
 - Using pre-compiled version (ready to use)
     - Please visit [Release](https://github.com/HG-ha/nsfwpy/releases) to download the pre-compiled version for your platform.
@@ -137,7 +150,7 @@ Returns a dictionary with probability values for the following categories:
 
 ## Acknowledgements
 
-The model in this project is based on [nsfw_model](https://github.com/GantMan/nsfw_model). Thanks to the original authors for their contribution.
+This project's model is based on [nsfw_model](https://github.com/GantMan/nsfw_model) and [nsfwjs](https://github.com/infinitered/nsfwjs). Thanks to the original authors for their contribution.
 
 ### Recommended Resources
 1. Sirius Framework: <https://www.siriusbot.cn/>

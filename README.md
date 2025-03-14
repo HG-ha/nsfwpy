@@ -30,8 +30,21 @@
     pip install -e .
     ```
     
-- Docker
+- Docker（默认使用模型：model.onnx）
     - `docker run -p 8000:8000 yiminger/nsfwpy`
+    - 使用指定模型启动
+        - 默认模型
+            ```
+            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/model.onnx -p 8000:8000 nsfwpy
+            ```
+        - m2模型（NSFWJS mobilenet_v2）
+            ```
+            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/m2model.onnx -p 8000:8000 nsfwpy
+            ```
+        - i3模型（NSFWJS inception_v3）
+            ```
+            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/i3model.onnx -p 8000:8000 nsfwpy
+            ```
 
 - 使用预编译版本（开箱即用）
     - 请前往 [Release](https://github.com/HG-ha/nsfwpy/releases) 下载对应平台的预编译版本。
@@ -139,7 +152,7 @@
 
 ## 致谢
 
-本项目的模型基于[nsfw_model](https://github.com/GantMan/nsfw_model)。感谢原作者的贡献。
+本项目的模型基于 [nsfw_model](https://github.com/GantMan/nsfw_model) 以及 [nsfwjs](https://github.com/infinitered/nsfwjs)。感谢原作者的贡献。
 
 ### 推荐资源
 1.  天狼星框架：<https://www.siriusbot.cn/>

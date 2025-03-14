@@ -9,7 +9,7 @@ def main():
     parser.add_argument("--port", type=int, default=8000, help="API服务器端口")
     parser.add_argument("--model", help="模型文件路径（指定此参数时将忽略--type）")
     parser.add_argument("--type", choices=['d', 'm2', 'i3'],
-                       default=os.environ.get('MODEL_TYPE', 'd'),
+                       default=os.environ.get('NSFWPY_MODEL_TYPE', 'd'),
                        help='模型类型：d(默认), m2, i3。注意：当指定--model时此参数无效')
     parser.add_argument("-w", "--web", action="store_true", help="启用Web API服务")
     parser.add_argument("--input", help="要检测的图像文件或目录")
@@ -19,7 +19,7 @@ def main():
     # 如果指定了模型路径，设置环境变量
     if args.model:
         os.environ["NSFWPY_ONNX_MODEL"] = str(Path(args.model).absolute())
-    
+
     # 只在指定--web参数时启动API服务器
     if args.web:
         # 启动服务器
