@@ -1,5 +1,3 @@
-# nsfwpy
-
 English | [简体中文](README.md)
 
 # nsfwpy
@@ -33,17 +31,17 @@ A lightweight Python library for image content analysis using deep learning mode
 - Docker (Default model: model.onnx)
     - `docker run -p 8000:8000 yiminger/nsfwpy`
     - Start with specific model:
-        - Default model
+        - `d` Default model
             ```
-            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/model.onnx -p 8000:8000 nsfwpy
+            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/model.onnx -p 8000:8000 yiminger/nsfwpy
             ```
-        - m2 model (NSFWJS mobilenet_v2)
+        - `m2` model (NSFWJS mobilenet_v2)
             ```
-            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/m2model.onnx -p 8000:8000 nsfwpy
+            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/m2model.onnx -p 8000:8000 yiminger/nsfwpy
             ```
-        - i3 model (NSFWJS inception_v3), Speed is half that of other models.
+        - `i3` model (NSFWJS inception_v3), Speed is half that of other models.
             ```
-            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/i3model.onnx -p 8000:8000 nsfwpy
+            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/i3model.onnx -p 8000:8000 yiminger/nsfwpy
             ```
 
 - Using pre-compiled version (ready to use)
@@ -96,9 +94,20 @@ A lightweight Python library for image content analysis using deep learning mode
     # Specify custom model path
     nsfwpy --model path/to/model.onnx --input path/to/image.jpg
 
-    # Specify model image dimensions (usually not needed as current model only supports 224)
-    nsfwpy --dim 299 --input path/to/image.jpg
+    # Specify model type (d: default model, m2: mobilenet_v2, i3: inception_v3)
+    nsfwpy --type m2 --input path/to/image.jpg
+
+    # Start Web API service
+    nsfwpy -w [--host 127.0.0.1] [--port 8080]
     ```
+
+Command line arguments:
+- `--input`: Path to image file or directory to analyze
+- `--model`: Custom model file path (--type will be ignored when this is specified)
+- `--type`: Model type selection, options: d(default), m2, i3
+- `-w, --web`: Enable Web API service
+- `--host`: API server hostname (default: 0.0.0.0)
+- `--port`: API server port (default: 8000)
 
 ### Web API Service (Fully compatible with nsfwjs-api)
 
