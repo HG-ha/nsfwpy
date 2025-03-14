@@ -12,6 +12,7 @@ def main():
     args = parser.parse_args()
 
     # 创建检测器，如果未指定模型路径，则使用默认值
+    print(args.model, args.type)
     detector = NSFWDetectorONNX(model_path=args.model, model_type=args.type)
     results = detector.predict_batch(args.input)
 
