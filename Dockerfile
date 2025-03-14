@@ -26,6 +26,8 @@ COPY --from=builder /app/nsfwpy ./nsfwpy
 # 设置环境变量
 ENV HOST=0.0.0.0
 ENV PORT=8000
+# 使用默认模型
+ENV MODEL_TYPE=d
 
 EXPOSE 8000
 
@@ -36,6 +38,6 @@ USER appuser
 RUN mkdir -p /home/appuser/.cache/nsfwpy && \
     chown -R appuser:appuser /home/appuser/.cache
 
-COPY model/model.onnx /home/appuser/.cache/nsfwpy/model.onnx
+COPY model/ /home/appuser/.cache/nsfwpy/
 
 CMD ["python", "-m", "nsfwpy.server", "-w"]

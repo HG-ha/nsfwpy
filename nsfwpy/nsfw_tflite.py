@@ -26,7 +26,7 @@ class NSFWDetector:
         self.image_dim = image_dim
         
         # 优先检查环境变量中是否设置了模型路径
-        env_model_path = os.environ.get("NSFW_MODEL_PATH")
+        env_model_path = os.environ.get("NSFWPY_ONNX_MODEL")
         if env_model_path and os.path.exists(env_model_path):
             model_path = env_model_path
         # 若未通过环境变量或参数提供模型路径，则自动获取
@@ -49,7 +49,7 @@ class NSFWDetector:
     def _get_model_path(self):
         """根据平台获取缓存路径，检查模型文件是否存在，不存在则下载"""
         # 首先检查环境变量
-        env_model_path = os.environ.get("NSFW_MODEL_PATH")
+        env_model_path = os.environ.get("NSFWPY_ONNX_MODEL")
         if env_model_path:
             # 如果环境变量指定的是目录而非文件，则在目录下查找model.tflite
             if os.path.isdir(env_model_path):
@@ -99,7 +99,7 @@ class NSFWDetector:
             image = Image.open(image_path)
             if image.mode != 'RGB':
                 image = image.convert('RGB')
-            image = image.resize((self.image_dim, self.image_dim), Image.NEAREST)
+            image = image.resize((self.image_dim, self.image_dim), Image.BICUBIC)
             image = np.array(image, dtype=np.float32) / 255.0
             return image
         except Exception as ex:
@@ -111,7 +111,7 @@ class NSFWDetector:
         try:
             if pil_image.mode != 'RGB':
                 pil_image = pil_image.convert('RGB')
-            resized_image = pil_image.resize((self.image_dim, self.image_dim), Image.NEAREST)
+            resized_image = pil_image.resize((self.image_dim, self.image_dim), Image.BICUBIC)
             image = np.array(resized_image, dtype=np.float32) / 255.0
             return image
         except Exception as ex:
@@ -126,13 +126,10 @@ class NSFWDetector:
     
     def _format_predictions(self, predictions):
         """将预测结果格式化为类别和概率"""
-        # 按概率降序排列
-        indices = np.argsort(-predictions)
         result = {}
-        for i, idx in enumerate(indices):
+        for idx, probability in enumerate(predictions):
             category = self.CATEGORIES[idx]
-            probability = float(predictions[idx])
-            result[category] = probability
+            result[category] = format(probability, '.8f')
         return result
     
     def predict_image(self, image_path):
