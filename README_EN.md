@@ -39,7 +39,7 @@ A lightweight Python library for image content analysis using deep learning mode
             ```
             docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/m2model.onnx -p 8000:8000 yiminger/nsfwpy
             ```
-        - `i3` model (NSFWJS inception_v3), Speed is half that of other models.
+        - `i3` model (NSFWJS inception_v3), It takes twice as long as the others.
             ```
             docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/i3model.onnx -p 8000:8000 yiminger/nsfwpy
             ```
