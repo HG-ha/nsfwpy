@@ -38,6 +38,14 @@ A lightweight Python library for image content analysis using deep learning mode
     - Windows: Enter `nsfwpy.exe` in cmd
     - Linux: `chmod +x nsfwpy && ./nsfwpy`
 
+- Termux
+    ```bash
+    pkg install python3 git python-pip python-onnxruntime rust -y
+    git clone https://github.com/HG-ha/nsfwpy.git && cd nsfwpy
+    pip install -e .
+    nsfwpy --help
+    ```
+    
 ### Building for other platforms
 - Refer to `build.bat | build.sh`
 

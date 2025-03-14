@@ -38,6 +38,14 @@
     - windows：在cmd中输入 `nsfwpy.exe`
     - linux：`chmod +x nsfwpy && ./nsfwpy`
 
+- Termux
+    ```bash
+    pkg install python3 git python-pip python-onnxruntime rust -y
+    git clone https://github.com/HG-ha/nsfwpy.git && cd nsfwpy
+    pip install -e .
+    nsfwpy --help
+    ```
+
 ### 编译其他平台版本
 - 参考 `build.bat | build.sh`
 

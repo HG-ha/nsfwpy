@@ -14,7 +14,7 @@ install_requires = [
 
 setuptools.setup(
     name="nsfwpy",
-    version="0.1.1",
+    version="0.1.2",
     author="YiMing",
     author_email="1790233968@qq.com",
     description="基于OpenNSFW的图像内容检测工具",
@@ -24,17 +24,15 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=install_requires,
     classifiers=[
-        "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9",
-        "Programming Language :: Python :: 3.10",
-        "Programming Language :: Python :: 3.11",
-        "Operating System :: OS Independent",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3 :: Only",
+        "Operating System :: Microsoft :: Windows",
+        "Operating System :: POSIX :: Linux",
+        "Operating System :: MacOS",
     ],
     entry_points={
         'console_scripts': [
             'nsfwpy=nsfwpy.server:main',
         ],
-    },
-    python_requires='>=3.7',
+    }
 )
