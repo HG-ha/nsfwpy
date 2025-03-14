@@ -19,6 +19,10 @@ def main():
     # 如果指定了模型路径，设置环境变量
     if args.model:
         os.environ["NSFWPY_ONNX_MODEL"] = str(Path(args.model).absolute())
+    
+    # 设置模型类型环境变量
+    if args.type:
+        os.environ["NSFWPY_MODEL_TYPE"] = args.type
 
     # 只在指定--web参数时启动API服务器
     if args.web:

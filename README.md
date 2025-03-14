@@ -41,7 +41,7 @@
             ```
             docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/m2model.onnx -p 8000:8000 nsfwpy
             ```
-        - i3模型（NSFWJS inception_v3）
+        - i3模型（NSFWJS inception_v3），速度是其他模型的一半
             ```
             docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/i3model.onnx -p 8000:8000 nsfwpy
             ```

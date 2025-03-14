@@ -74,7 +74,7 @@ class NSFWDetectorONNX:
     def _get_model_path(self):
         """根据平台获取缓存路径，检查模型文件是否存在，不存在则下载"""
         # 首先检查环境变量
-        env_model_path = os.environ.get("NSFWPY_ONNX_MODEL")
+        env_model_path = os.environ.get("NSFW_ONNX_MODEL")
         if env_model_path:
             # 如果环境变量指定的是目录而非文件，则在目录下查找model.onnx
             if os.path.isdir(env_model_path):

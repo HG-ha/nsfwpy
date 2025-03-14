@@ -1,4 +1,5 @@
 from typing import List, Dict
+import os
 from pydantic import BaseModel
 from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,15 +10,23 @@ from .nsfw import NSFWDetectorONNX
 global_detector = None
 
 # 加载模型的辅助函数
-def get_detector(model_path=None):
+def get_detector(model_path=None, model_type=None):
     global global_detector
     
     # 如果已经有全局模型实例，直接返回
     if (global_detector is not None):
         return global_detector
     
+    # 如果未指定model_path，尝试从环境变量获取
+    if model_path is None:
+        model_path = os.environ.get("NSFWPY_ONNX_MODEL")
+    
+    # 如果未指定model_type，尝试从环境变量获取
+    if model_type is None:
+        model_type = os.environ.get("NSFWPY_MODEL_TYPE", "d")
+    
     # 创建新的检测器实例
-    detector = NSFWDetectorONNX(model_path=model_path)
+    detector = NSFWDetectorONNX(model_path=model_path, model_type=model_type)
     
     # 保存为全局实例
     global_detector = detector
