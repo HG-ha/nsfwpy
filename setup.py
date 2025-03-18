@@ -12,9 +12,19 @@ install_requires = [
     "numpy<=1.26.4",
 ]
 
+def is_opencv_installed():
+    try:
+        import cv2
+        return True
+    except ImportError:
+        return False
+    
+if not is_opencv_installed():
+    install_requires.append("opencv-python-headless<=4.11.0.86")
+
 setuptools.setup(
     name="nsfwpy",
-    version="0.1.4.1",
+    version="0.1.4.2",
     author="YiMing",
     author_email="1790233968@qq.com",
     description="基于OpenNSFW的图像内容检测工具",

@@ -83,6 +83,14 @@ A lightweight Python library for image content analysis using deep learning mode
     # Batch predict images in directory
     results = detector.predict_batch("path/to/image/directory")
     print(results)
+    
+    # Predict video file
+    result = detector.predict_video(
+        "path/to/video.mp4",
+        sample_rate=0.1,  # Sampling rate, process 1 frame every 10 frames
+        max_frames=100    # Maximum number of frames to process
+    )
+    print(result)
     ```
 
 - Command Line Tool
@@ -102,12 +110,14 @@ A lightweight Python library for image content analysis using deep learning mode
     ```
 
 Command line arguments:
-- `--input`: Path to image file or directory to analyze
+- `--input`: Path to image/video file or directory to analyze
 - `--model`: Custom model file path (--type will be ignored when this is specified)
 - `--type`: Model type selection, options: d(default), m2, i3
 - `-w, --web`: Enable Web API service
 - `--host`: API server hostname (default: 0.0.0.0)
 - `--port`: API server port (default: 8000)
+- `-s, --sample-rate`: Video sampling rate, range 0-1 (default: 0.1)
+- `-f, --max-frames`: Maximum frames to process for video (default: 100)
 
 ### Web API Service (Fully compatible with nsfwjs-api)
 
@@ -125,8 +135,9 @@ Command line arguments:
     ```
 
 - API endpoints:
-    - `POST /classify`: Analyze single image
+    - `POST /classify`: Analyze single image (supports images and GIFs)
     - `POST /classify-many`: Batch analyze multiple images
+    - `POST /classify-video`: Analyze video file
 
 - API documentation:
     - [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
@@ -142,6 +153,13 @@ Command line arguments:
         curl --location --request POST 'http://127.0.0.1:8000/classify-many' \
         --form 'images=@"image.jpeg"' \
         --form 'images=@"image2.jpeg"'
+        ```
+    - /classify-video
+        ```
+        curl --location --request POST 'http://127.0.0.1:8000/classify-video' \
+        --form 'video=@"video.mp4"' \
+        --form 'sample_rate=0.1' \
+        --form 'max_frames=100'
         ```
 
 ### Prediction Result Format

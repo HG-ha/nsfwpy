@@ -1,4 +1,4 @@
-__version__ = "0.1.4.1"
+__version__ = "0.1.4.2"
 
 from .nsfw import NSFWDetectorONNX
 

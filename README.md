@@ -84,6 +84,14 @@
     # 批量预测目录中的图像
     results = detector.predict_batch("path/to/image/directory")
     print(results)
+
+    # 预测视频文件
+    result = detector.predict_video(
+        "path/to/video.mp4",
+        sample_rate=0.1,  # 采样率，表示每10帧取1帧
+        max_frames=100    # 最大处理帧数
+    )
+    print(result)
     ```
 
 - 命令行工具
@@ -103,12 +111,14 @@
     ```
 
 命令行参数说明：
-- `--input`: 要检测的图像文件或目录路径
+- `--input`: 要检测的图像或视频文件路径
 - `--model`: 自定义模型文件路径（指定此参数时将忽略--type）
 - `--type`: 模型类型选择，可选值：d(默认), m2, i3
 - `-w, --web`: 启用Web API服务
 - `--host`: API服务器主机名（默认：0.0.0.0）
 - `--port`: API服务器端口（默认：8000）
+- `-s, --sample-rate`: 视频采样率，范围0-1（默认：0.1）
+- `-f, --max-frames`: 视频最大处理帧数（默认：100）
 
 ### Web API服务（完全兼容 nsfwjs-api）
 
@@ -126,8 +136,9 @@
     ```
 
 - API端点：
-    - `POST /classify`: 分析单张图片
+    - `POST /classify`: 分析单张图片（支持图片和GIF）
     - `POST /classify-many`: 批量分析多张图片
+    - `POST /classify-video`: 分析视频文件
 
 - API文档：
     - [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
@@ -144,7 +155,13 @@
         --form 'images=@"image.jpeg"' \
         --form 'images=@"image2.jpeg"'
         ```
-    
+    - /classify-video
+        ```
+        curl --location --request POST 'http://127.0.0.1:8000/classify-video' \
+        --form 'video=@"video.mp4"' \
+        --form 'sample_rate=0.1' \
+        --form 'max_frames=100'
+        ```
 
 ### 预测结果格式
 

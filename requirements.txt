@@ -4,3 +4,4 @@ fastapi<=0.115.11
 uvicorn<=0.34.0
 onnxruntime<=1.21.0
 python-multipart<=0.0.20
+opencv-python-headless<=4.11.0.86

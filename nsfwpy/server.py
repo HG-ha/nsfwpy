@@ -12,7 +12,12 @@ def main():
                        default=os.environ.get('NSFWPY_MODEL_TYPE', 'd'),
                        help='模型类型：d(默认), m2, i3。注意：当指定--model时此参数无效')
     parser.add_argument("-w", "--web", action="store_true", help="启用Web API服务")
-    parser.add_argument("--input", help="要检测的图像文件或目录")
+    parser.add_argument("--input", help="要检测的图像或视频文件路径")
+    # 添加视频处理相关参数
+    parser.add_argument("-s", "--sample-rate", type=float, default=0.1,
+                      help="视频采样率 (0-1), 默认0.1")
+    parser.add_argument("-f", "--max-frames", type=int, default=100,
+                      help="视频最大处理帧数，默认100")
     
     args, unknown_args = parser.parse_known_args()
     
@@ -41,6 +46,12 @@ def main():
             cli_args.extend(["--type", args.type])
         if args.input:
             cli_args.extend(["--input", args.input])
+            
+        # 添加视频处理相关参数
+        if args.sample_rate is not None:
+            cli_args.extend(["--sample-rate", str(args.sample_rate)])
+        if args.max_frames is not None:
+            cli_args.extend(["--max-frames", str(args.max_frames)])
         
         # 添加未知参数
         sys.argv[1:] = cli_args + unknown_args

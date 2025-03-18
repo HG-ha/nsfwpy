@@ -1,7 +1,7 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
 import os
 from pydantic import BaseModel
-from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from . import __version__ as version
 from .nsfw import NSFWDetectorONNX
@@ -80,7 +80,7 @@ async def classify_image(image: UploadFile = File(...)):
     try:
         detector = get_detector()
         image_bytes = await read_image_file(image)
-        result = detector.predict_from_bytes(image_bytes)
+        result = await detector.predict_from_bytes_async(image_bytes)
         
         # 立即关闭文件
         await image.close()
@@ -108,7 +108,7 @@ async def classify_many_images(images: List[UploadFile] = File(...)):
         for image in images:
             try:
                 image_bytes = await read_image_file(image)
-                result = detector.predict_from_bytes(image_bytes)
+                result = await detector.predict_from_bytes_async(image_bytes)
 
                 # 立即关闭文件
                 await image.close()
@@ -126,4 +126,59 @@ async def classify_many_images(images: List[UploadFile] = File(...)):
                 
         return results
     except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/classify-video", response_model=Dict)
+async def classify_video(
+    video: UploadFile = File(...),
+    sample_rate: Optional[float] = Form(0.1),
+    max_frames: Optional[int] = Form(None)
+):
+    """
+    对上传的视频文件进行NSFW分类
+    
+    - sample_rate: 采样率，0-1之间，如0.1表示每10帧取1帧
+    - max_frames: 最大处理帧数，限制处理量
+    """
+    try:
+        detector = get_detector()
+        
+        # 保存上传的视频到临时文件
+        temp_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), "temp")
+        os.makedirs(temp_dir, exist_ok=True)
+        
+        temp_file = os.path.join(temp_dir, f"temp_video_{os.urandom(8).hex()}.mp4")
+        
+        try:
+            # 读取并保存视频文件
+            video_content = await video.read()
+            with open(temp_file, "wb") as f:
+                f.write(video_content)
+            
+            # 释放内存
+            del video_content
+            await video.close()
+            
+            # 处理视频
+            result = await detector.predict_video_async(
+                temp_file, 
+                sample_rate=float(sample_rate) if sample_rate is not None else 0.1, 
+                max_frames=int(max_frames) if max_frames is not None else None
+            )
+            
+            if not result:
+                raise HTTPException(status_code=500, detail="视频处理失败")
+                
+            return result
+        finally:
+            # 清理临时文件
+            if os.path.exists(temp_file):
+                try:
+                    os.remove(temp_file)
+                except:
+                    pass
+    
+    except Exception as e:
+        if video:
+            await video.close()
         raise HTTPException(status_code=500, detail=str(e))
