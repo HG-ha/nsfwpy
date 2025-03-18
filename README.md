@@ -53,7 +53,7 @@
 
 - Termux
     ```bash
-    pkg install python3 git python-pip python-onnxruntime rust -y
+    pkg install -y build-essential cmake ninja patchelf python3 git python-pip python-onnxruntime python-pillow rust
     git clone https://github.com/HG-ha/nsfwpy.git && cd nsfwpy
     pip install -e .
     nsfwpy --help
@@ -170,7 +170,7 @@
 返回包含以下类别概率值的字典：
 ```python
 {
-    "drawings": 0.1,    # 绘画/动画
+    "drawing": 0.1,    # 绘画/动画
     "hentai": 0.0,     # 动漫色情内容（変態）
     "neutral": 0.8,    # 中性/安全内容
     "porn": 0.0,       # 色情内容

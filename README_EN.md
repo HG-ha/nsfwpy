@@ -51,7 +51,7 @@ A lightweight Python library for image content analysis using deep learning mode
 
 - Termux
     ```bash
-    pkg install python3 git python-pip python-onnxruntime rust -y
+    pkg install -y build-essential cmake ninja patchelf python3 git python-pip python-onnxruntime python-pillow rust
     git clone https://github.com/HG-ha/nsfwpy.git && cd nsfwpy
     pip install -e .
     nsfwpy --help
@@ -167,7 +167,7 @@ Command line arguments:
 Returns a dictionary with probability values for the following categories:
 ```python
 {
-    "drawings": 0.1,    # Drawings/Animation
+    "drawing": 0.1,    # Drawings/Animation
     "hentai": 0.0,     # Anime pornographic content
     "neutral": 0.8,    # Neutral/Safe content
     "porn": 0.0,       # Pornographic content

@@ -12,7 +12,7 @@ import cv2  # 添加OpenCV库
 class NSFWDetectorONNX:
     """NSFW内容检测器，基于MobileNet V2模型的ONNX版本"""
     
-    CATEGORIES = ['drawings', 'hentai', 'neutral', 'porn', 'sexy']
+    CATEGORIES = ['drawing', 'hentai', 'neutral', 'porn', 'sexy']
     
     MODEL_CONFIGS = {
         'd': {
