@@ -1,12 +1,14 @@
 English | [简体中文](README.md)
 
 # nsfwpy
-A lightweight Python library for image content analysis using deep learning models to detect inappropriate content in images.
+A lightweight Python library that utilizes deep learning models for image content analysis, capable of identifying whether images contain inappropriate content. It supports common image formats as well as GIFs, and also supports common video formats.
 
 ## Features
 
 - Lightweight implementation with minimal dependencies, easy to deploy
 - Support for multiple image formats (almost all common formats)
+- Support for GIFs
+- Support for common video formats
 - Provides Command Line Tool, Python API, and HTTP API interfaces
 - Supports Windows and other operating systems
 - Automatic model download and caching
