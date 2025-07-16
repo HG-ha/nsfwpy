@@ -3,6 +3,7 @@ import numpy as np
 from PIL import Image
 import onnxruntime as ort
 import io
+import json
 import platform
 import urllib.request
 import asyncio
@@ -65,14 +66,45 @@ class NSFWDetectorONNX:
         else:
             self.image_dim = 224
         
-        # 创建ONNX运行时会话
-        self.session = ort.InferenceSession(self.model_path)
+        providers = [
+            ('CUDAExecutionProvider', {
+                'enable_cuda_graph': True,
+                'cudnn_conv_algo_search': 'EXHAUSTIVE',
+            }),
+            'CPUExecutionProvider'
+        ]
+        options = ort.SessionOptions()
+        options.intra_op_num_threads = 4
+        options.inter_op_num_threads = 2
+        # 限制显存1G
+        options.add_session_config_entry("session.cuda.mem_limit", "1073741824")
+        options.enable_cpu_mem_arena = False
+        self.session = ort.InferenceSession(model_path, sess_options=options, providers=providers)
+        current_provider = self.session.get_providers()[0]
+        print(f"当前使用的设备: {current_provider}")
         
         # 获取输入名称
         self.input_name = self.session.get_inputs()[0].name
 
         # 获取输出名称
         self.output_names = [output.name for output in self.session.get_outputs()]
+
+    def is_user_in_china():
+        """检测用户是否在中国大陆（使用 ipapi.co API）"""
+        try:
+            # 使用 urllib 获取 IP 信息
+            with urllib.request.urlopen("https://ipapi.co/json/") as response:
+                data = json.loads(response.read().decode())
+                return data.get('country') == 'CN'
+        except Exception as e:
+            print(f"IP检测失败: {e}, 默认不使用代理")
+        return False
+
+    def get_proxied_github_url(original_url):
+        """返回代理或原始 URL"""
+        if is_user_in_china():
+            return f"https://ghproxy.cn/{original_url}"
+        return original_url
 
     def _get_model_path(self):
         """根据平台获取缓存路径，检查模型文件是否存在，不存在则下载"""
@@ -105,7 +137,7 @@ class NSFWDetectorONNX:
         if not os.path.exists(model_path):
             print(f"ONNX模型文件不存在，正在下载到 {model_path}...")
             try:
-                self._download_file(self.MODEL_CONFIGS[self.model_type]['url'], model_path)
+                self._download_file(self.get_proxied_github_url(self.MODEL_CONFIGS[self.model_type]['url'], model_path))
                 print("模型下载完成")
             except Exception as e:
                 raise ValueError(f"模型下载失败: {e}")
