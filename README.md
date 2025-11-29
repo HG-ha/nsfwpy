@@ -184,7 +184,6 @@
 本项目的模型基于 [nsfw_model](https://github.com/GantMan/nsfw_model) 以及 [nsfwjs](https://github.com/infinitered/nsfwjs)。感谢原作者的贡献。
 
 ### 推荐资源
-1.  天狼星框架：<https://www.siriusbot.cn/>
-2.  镜芯API：<https://api2.wer.plus/>
-3.  林枫云_站长首选云服务器：<https://www.dkdun.cn/>
-4.  ICP备案查询：<https://icp.show/>
+1.  镜芯API：<https://api2.wer.plus/>
+2.  林枫云_站长首选云服务器：<https://www.dkdun.cn/>
+3.  ICP备案查询：<https://icp.show/>
