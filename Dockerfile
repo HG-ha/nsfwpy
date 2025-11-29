@@ -9,6 +9,14 @@ ENV PIP_NO_CACHE_DIR=1 \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
+# 安装编译工具和依赖（用于编译 numpy 等包）
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    gcc \
+    g++ \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
 # 安装依赖（先复制依赖文件，利用Docker缓存）
 COPY requirements.txt .
 RUN pip install --user --no-cache-dir -r requirements.txt
