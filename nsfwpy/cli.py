@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 NSFWpy 命令行工具 - 检测图像和视频中的NSFW内容
 """
@@ -7,6 +8,13 @@ import os
 import sys
 import argparse
 import json
+
+# 强制设置标准输出/错误输出为 UTF-8 编码
+if sys.stdout.encoding != 'utf-8':
+    import io
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 from .nsfw import NSFWDetectorONNX
 
 def main():

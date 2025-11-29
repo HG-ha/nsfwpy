@@ -1,4 +1,6 @@
+# -*- coding: utf-8 -*-
 import os
+import sys
 import numpy as np
 from PIL import Image
 import onnxruntime as ort
@@ -8,6 +10,11 @@ import platform
 import urllib.request
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
+
+# 强制设置标准输出/错误输出为 UTF-8 编码
+if hasattr(sys.stdout, 'buffer') and sys.stdout.encoding != 'utf-8':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 import cv2  # 添加OpenCV库
 
 class NSFWDetectorONNX:
@@ -67,18 +74,20 @@ class NSFWDetectorONNX:
             self.image_dim = 224
         
         providers = [
-            ('CUDAExecutionProvider', {
-                'enable_cuda_graph': True,
-                'cudnn_conv_algo_search': 'EXHAUSTIVE',
+           ("CUDAExecutionProvider", {
+                "cudnn_conv_algo_search": "EXHAUSTIVE",
             }),
-            'CPUExecutionProvider'
+         'CPUExecutionProvider',
         ]
+
+        # 2. 优化 Session 配置
         options = ort.SessionOptions()
         options.intra_op_num_threads = 4
-        options.inter_op_num_threads = 2
-        # 限制显存1G
         options.add_session_config_entry("session.cuda.mem_limit", "1073741824")
+        options.add_session_config_entry("session.dynamic_blocking", "true")
+        options.add_session_config_entry("session.use_device_allocator_for_initializers", "1")
         options.enable_cpu_mem_arena = False
+        options.enable_mem_pattern = False
         self.session = ort.InferenceSession(model_path, sess_options=options, providers=providers)
         current_provider = self.session.get_providers()[0]
         print(f"当前使用的设备: {current_provider}")
@@ -89,6 +98,7 @@ class NSFWDetectorONNX:
         # 获取输出名称
         self.output_names = [output.name for output in self.session.get_outputs()]
 
+    @staticmethod
     def is_user_in_china():
         """检测用户是否在中国大陆（使用 ipapi.co API）"""
         try:
@@ -100,9 +110,10 @@ class NSFWDetectorONNX:
             print(f"IP检测失败: {e}, 默认不使用代理")
         return False
 
+    @staticmethod
     def get_proxied_github_url(original_url):
         """返回代理或原始 URL"""
-        if is_user_in_china():
+        if NSFWDetectorONNX.is_user_in_china():
             return f"https://ghproxy.cn/{original_url}"
         return original_url
 

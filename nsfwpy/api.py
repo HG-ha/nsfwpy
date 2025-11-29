@@ -1,10 +1,18 @@
+# -*- coding: utf-8 -*-
 from typing import List, Dict, Optional
 import os
+import sys
+import io
 from pydantic import BaseModel
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
 from . import __version__ as version
 from .nsfw import NSFWDetectorONNX
+
+# 强制设置标准输出/错误输出为 UTF-8 编码
+if hasattr(sys.stdout, 'buffer') and sys.stdout.encoding != 'utf-8':
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 # 全局模型实例
 global_detector = None

@@ -1,0 +1,142 @@
+name: Build Cross-Platform Executables
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v3
+
+      - name: 设置 Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: 安装依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install nuitka ordered-set zstandard
+
+      - name: 编译可执行文件 (Windows)
+        run: |
+          .\build.bat
+
+      - name: 上传 Windows 可执行文件
+        uses: actions/upload-artifact@v3
+        with:
+          name: nsfwpy-windows-amd64
+          path: dist/nsfwpy.exe
+          retention-days: 30
+
+  build-linux:
+    runs-on: ubuntu-20.04
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v3
+
+      - name: 设置 Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: 安装系统依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y patchelf ccache
+
+      - name: 安装 Python 依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install nuitka ordered-set zstandard
+
+      - name: 编译可执行文件 (Linux)
+        run: |
+          chmod +x build.sh
+          ./build.sh
+
+      - name: 上传 Linux 可执行文件
+        uses: actions/upload-artifact@v3
+        with:
+          name: nsfwpy-linux-amd64
+          path: dist/nsfwpy
+          retention-days: 30
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v3
+
+      - name: 设置 Python 3.10
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: 安装 Python 依赖
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install nuitka ordered-set zstandard
+
+      - name: 编译可执行文件 (macOS)
+        run: |
+          chmod +x build.sh
+          ./build.sh
+
+      - name: 上传 macOS 可执行文件
+        uses: actions/upload-artifact@v3
+        with:
+          name: nsfwpy-macos-amd64
+          path: dist/nsfwpy
+          retention-days: 30
+
+  create-release:
+    needs: [build-windows, build-linux, build-macos]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v3
+
+      - name: 下载所有构建产物
+        uses: actions/download-artifact@v3
+        with:
+          path: artifacts
+
+      - name: 重命名文件
+        run: |
+          mkdir -p release
+          cp artifacts/nsfwpy-windows-amd64/nsfwpy.exe release/nsfwpy-windows-amd64.exe
+          cp artifacts/nsfwpy-linux-amd64/nsfwpy release/nsfwpy-linux-amd64
+          cp artifacts/nsfwpy-macos-amd64/nsfwpy release/nsfwpy-macos-amd64
+          
+          # 为Linux和macOS添加执行权限
+          chmod +x release/nsfwpy-linux-amd64
+          chmod +x release/nsfwpy-macos-amd64
+
+      - name: 创建 Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            release/nsfwpy-windows-amd64.exe
+            release/nsfwpy-linux-amd64
+            release/nsfwpy-macos-amd64
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
