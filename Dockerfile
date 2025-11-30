@@ -1,13 +1,13 @@
 # 构建阶段
-FROM python:3.10-slim AS builder
+FROM python:3.11-slim AS builder
 
 WORKDIR /app
 
-# 设置pip不使用缓存并禁用版本检查，减少镜像大小
-ENV PIP_NO_CACHE_DIR=1 \
-    PIP_DISABLE_PIP_VERSION_CHECK=1 \
-    PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+# 设置环境变量
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy
 
 # 安装编译工具和依赖（用于编译 numpy 等包）
 RUN apt-get update && \
@@ -15,18 +15,21 @@ RUN apt-get update && \
     gcc \
     g++ \
     build-essential \
+    curl \
     && rm -rf /var/lib/apt/lists/*
 
-# 安装依赖（先复制依赖文件，利用Docker缓存）
-COPY requirements.txt .
-RUN pip install --user --no-cache-dir -r requirements.txt
+# 安装 uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 
-# 复制项目源代码
-COPY README.md setup.py ./
+# 复制项目文件
+COPY pyproject.toml README.md ./
 COPY nsfwpy/ ./nsfwpy/
 
+# 安装依赖
+RUN uv pip install --system .
+
 # 运行阶段
-FROM python:3.10-slim
+FROM python:3.11-slim
 
 WORKDIR /app
 
@@ -38,7 +41,7 @@ ENV HOST=0.0.0.0 \
     PYTHONUNBUFFERED=1
 
 # 复制Python包和依赖
-COPY --from=builder /root/.local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
+COPY --from=builder /usr/local/lib/python3.10/site-packages /usr/local/lib/python3.10/site-packages
 COPY --from=builder /app/nsfwpy ./nsfwpy
 
 # 暴露端口

@@ -73,49 +73,96 @@ class NSFWDetectorONNX:
         else:
             self.image_dim = 224
         
-        providers = [
-           ("CUDAExecutionProvider", {
+        # 获取所有可用的 providers
+        available_providers = ort.get_available_providers()
+        
+        # 根据可用性动态构建 providers 列表
+        providers = []
+        
+        # 优先使用 CUDA（如果可用）
+        if 'CUDAExecutionProvider' in available_providers:
+            providers.append(('CUDAExecutionProvider', {
                 "cudnn_conv_algo_search": "EXHAUSTIVE",
-            }),
-         'CPUExecutionProvider',
-        ]
+            }))
+        
+        # 总是添加 CPU 作为后备
+        if 'CPUExecutionProvider' in available_providers:
+            providers.append('CPUExecutionProvider')
+        
+        # 如果没有可用的 provider，使用默认值
+        if not providers:
+            providers = None
 
-        # 2. 优化 Session 配置
+        # 优化 Session 配置
         options = ort.SessionOptions()
         options.intra_op_num_threads = 4
-        options.add_session_config_entry("session.cuda.mem_limit", "1073741824")
-        options.add_session_config_entry("session.dynamic_blocking", "true")
-        options.add_session_config_entry("session.use_device_allocator_for_initializers", "1")
+        
+        # 只在使用 CUDA 时设置 CUDA 相关配置
+        if 'CUDAExecutionProvider' in available_providers:
+            options.add_session_config_entry("session.cuda.mem_limit", "1073741824")
+            options.add_session_config_entry("session.dynamic_blocking", "true")
+            options.add_session_config_entry("session.use_device_allocator_for_initializers", "1")
+        
         options.enable_cpu_mem_arena = False
         options.enable_mem_pattern = False
-        self.session = ort.InferenceSession(model_path, sess_options=options, providers=providers)
-        current_provider = self.session.get_providers()[0]
-        print(f"当前使用的设备: {current_provider}")
         
-        # 获取输入名称
+        # 创建推理会话
+        self.session = ort.InferenceSession(self.model_path, sess_options=options, providers=providers)
+        
         self.input_name = self.session.get_inputs()[0].name
-
-        # 获取输出名称
         self.output_names = [output.name for output in self.session.get_outputs()]
 
     @staticmethod
     def is_user_in_china():
-        """检测用户是否在中国大陆（使用 ipapi.co API）"""
+        """检测用户是否在中国大陆"""
+        # 优先检查环境变量
+        use_proxy = os.environ.get("NSFWPY_USE_CHINA_MIRROR")
+        if use_proxy is not None:
+            return use_proxy.lower() in ('1', 'true', 'yes')
+        
+        # 尝试通过IP检测
         try:
-            # 使用 urllib 获取 IP 信息
-            with urllib.request.urlopen("https://ipapi.co/json/") as response:
+            # 设置超时时间避免长时间等待
+            req = urllib.request.Request(
+                "https://ipapi.co/json/",
+                headers={'User-Agent': 'Mozilla/5.0'}
+            )
+            with urllib.request.urlopen(req, timeout=3) as response:
                 data = json.loads(response.read().decode())
-                return data.get('country') == 'CN'
-        except Exception as e:
-            print(f"IP检测失败: {e}, 默认不使用代理")
+                country = data.get('country_code') or data.get('country')
+                return country == 'CN'
+        except Exception:
+            # IP检测失败，尝试检测时区
+            try:
+                import time
+                tz_offset = -time.timezone / 3600
+                # 中国使用 UTC+8
+                if tz_offset == 8:
+                    return True
+            except Exception:
+                pass
+        
         return False
 
     @staticmethod
     def get_proxied_github_url(original_url):
-        """返回代理或原始 URL"""
-        if NSFWDetectorONNX.is_user_in_china():
-            return f"https://ghproxy.cn/{original_url}"
-        return original_url
+        """返回代理或原始 URL
+        
+        环境变量说明:
+        - NSFWPY_USE_CHINA_MIRROR: 设置为 1/true/yes 强制使用国内镜像
+        - NSFWPY_GITHUB_MIRROR: 自定义镜像地址，例如 https://ghproxy.cn
+        """
+        # 检查是否需要使用代理
+        if not NSFWDetectorONNX.is_user_in_china():
+            return original_url
+        
+        # 检查自定义镜像地址
+        custom_mirror = os.environ.get("NSFWPY_GITHUB_MIRROR")
+        if custom_mirror:
+            return f"{custom_mirror}/{original_url}"
+        
+        # 使用默认镜像服务
+        return original_url.replace("https://github.com", "https://ghproxy.cn/https://github.com")
 
     def _get_model_path(self):
         """根据平台获取缓存路径，检查模型文件是否存在，不存在则下载"""
@@ -148,20 +195,53 @@ class NSFWDetectorONNX:
         if not os.path.exists(model_path):
             print(f"ONNX模型文件不存在，正在下载到 {model_path}...")
             try:
-                self._download_file(self.get_proxied_github_url(self.MODEL_CONFIGS[self.model_type]['url'], model_path))
-                print("模型下载完成")
+                # 获取原始URL
+                original_url = self.MODEL_CONFIGS[self.model_type]['url']
+                # 如果在中国，使用代理URL
+                download_url = self.get_proxied_github_url(original_url)
+                print(f"下载地址: {download_url}")
+                # 下载文件
+                self._download_file(download_url, model_path)
+                print("✓ 模型下载完成")
             except Exception as e:
                 raise ValueError(f"模型下载失败: {e}")
         
         return model_path
     
     def _download_file(self, url, destination):
-        """从指定URL下载文件到目标路径"""
+        """从指定URL下载文件到目标路径，带进度显示"""
         try:
-            with urllib.request.urlopen(url) as response:
+            req = urllib.request.Request(
+                url,
+                headers={'User-Agent': 'Mozilla/5.0'}
+            )
+            
+            with urllib.request.urlopen(req, timeout=30) as response:
+                total_size = int(response.headers.get('Content-Length', 0))
+                
                 with open(destination, "wb") as f:
-                    f.write(response.read())
+                    if total_size > 0:
+                        # 带进度显示
+                        downloaded = 0
+                        block_size = 8192
+                        while True:
+                            buffer = response.read(block_size)
+                            if not buffer:
+                                break
+                            downloaded += len(buffer)
+                            f.write(buffer)
+                            
+                            # 显示进度
+                            progress = (downloaded / total_size) * 100
+                            print(f'\r下载进度: {progress:.1f}% ({downloaded}/{total_size} 字节)', end='', flush=True)
+                        print()  # 换行
+                    else:
+                        # 没有Content-Length，直接下载
+                        f.write(response.read())
         except Exception as e:
+            # 删除不完整的文件
+            if os.path.exists(destination):
+                os.remove(destination)
             raise ValueError(f"下载失败: {e}")
 
     def _process_gif(self, gif_image):

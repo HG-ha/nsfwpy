@@ -1,9 +1,11 @@
-# pip install nuitka
+# 使用 uv 安装依赖和构建工具
 # apt\dnf\yum install patchelf
-# pip install -r requirements.txt
+# curl -LsSf https://astral.sh/uv/install.sh | sh
+# uv pip install --system -r pyproject.toml
+# uv pip install --system nuitka ordered-set zstandard
 
 
-python -m nuitka --standalone \
+uv run python -m nuitka --standalone \
     --onefile \
     --output-dir=dist \
     --output-filename=nsfwpy \
