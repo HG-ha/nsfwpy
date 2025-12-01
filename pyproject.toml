@@ -1,6 +1,6 @@
 [project]
 name = "nsfwpy"
-version = "0.1.0"
+version = "0.1.4.4"
 description = "A lightweight Python library for NSFW content detection using ONNX models"
 readme = "README.md"
 requires-python = ">=3.8"
