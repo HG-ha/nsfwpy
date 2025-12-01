@@ -2,26 +2,36 @@ name: Publish to PyPI
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - 'v*.*.*'  # 触发条件：推送 v 开头的标签，如 v1.0.0
+  workflow_dispatch:  # 允许手动触发
 
 jobs:
   build-publish:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # 用于 PyPI 可信发布（推荐）
+      contents: read
     steps:
-      - uses: actions/checkout@v2
-      - name: Set up Python 3.10.9
-        uses: actions/setup-python@v2
+      - uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.10.9
-      - name: Install dependencies
+          python-version: '3.10'
+      
+      - name: Install uv
+        uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+      
+      - name: Build package
         run: |
-          python -m pip install --upgrade pip
-          pip install setuptools wheel twine
-      - name: Build and publish
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI }}
-        run: |
-          python setup.py sdist bdist_wheel
-          twine upload dist/*
+          # 使用 setup.py 构建
+          python -m pip install --upgrade pip build
+          python -m build
+      
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          password: ${{ secrets.PYPI_API_TOKEN }}
