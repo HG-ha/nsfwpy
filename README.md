@@ -14,6 +14,8 @@
 - 支持Windows和其他操作系统
 - 自动下载和缓存模型文件
 - 提供预编译版本
+- **支持硬件加速**（CUDA、TensorRT、DirectML、CoreML、OpenVINO）
+- **智能检测中国境内用户并自动使用镜像加速下载**
 
 ## 安装
 
@@ -30,7 +32,7 @@
     cd nsfwpy
     pip install -e .
     ```
-    
+
 - Docker（默认使用模型：model.onnx）
     - `docker run -p 8000:8000 yiminger/nsfwpy`
     - 使用指定模型启动
@@ -66,17 +68,57 @@
 
 ## 使用方法
 
-- Python API
+### 硬件加速支持
 
-    ```python
-    from nsfwpy import NSFW
+nsfwpy 支持多种硬件加速选项以提升推理性能：
 
-    # 初始化检测器（首次运行会自动下载模型）
-    detector = NSFW()
+```python
+from nsfwpy import NSFW
 
-    # 预测单个图像
-    result = detector.predict_image("path/to/image.jpg")
-    print(result)
+# 自动选择最佳可用设备（推荐）
+detector = NSFW(device='auto')
+
+# 使用特定设备
+detector_cuda = NSFW(device='cuda')      # NVIDIA GPU (CUDA)
+detector_tensorrt = NSFW(device='tensorrt')  # NVIDIA GPU (TensorRT)
+detector_dml = NSFW(device='dml')        # Windows DirectML
+detector_coreml = NSFW(device='coreml')  # Apple CoreML (macOS/iOS)
+detector_openvino = NSFW(device='openvino')  # Intel OpenVINO
+detector_cpu = NSFW(device='cpu')        # CPU only
+```
+
+**支持的加速后端：**
+- `auto`: 自动选择最佳设备（默认）
+- `cuda`: NVIDIA CUDA
+- `tensorrt`: NVIDIA TensorRT
+- `dml`: DirectML (Windows)
+- `coreml`: Apple CoreML (macOS/iOS)
+- `openvino`: Intel OpenVINO
+- `cpu`: CPU（无加速）
+
+### 环境变量配置
+
+```bash
+# 模型路径配置
+NSFWPY_ONNX_MODEL=/path/to/model.onnx  # 自定义模型路径
+NSFW_ONNX_MODEL=/path/to/model.onnx    # 备用环境变量
+
+# 中国境内镜像加速（自动检测，也可手动配置）
+NSFWPY_USE_CHINA_MIRROR=1              # 强制使用国内镜像（1/true/yes）
+NSFWPY_GITHUB_MIRROR=https://ghproxy.cn  # 自定义镜像地址
+```
+
+### Python API
+
+```python
+from nsfwpy import NSFW
+
+# 初始化检测器（首次运行会自动下载模型）
+detector = NSFW()
+
+# 预测单个图像
+result = detector.predict_image("path/to/image.jpg")
+print(result)
 
     # 预测PIL图像
     from PIL import Image
@@ -184,6 +226,7 @@
 本项目的模型基于 [nsfw_model](https://github.com/GantMan/nsfw_model) 以及 [nsfwjs](https://github.com/infinitered/nsfwjs)。感谢原作者的贡献。
 
 ### 推荐资源
-1.  镜芯API：<https://api2.wer.plus/>
-2.  林枫云_站长首选云服务器：<https://www.dkdun.cn/>
-3.  ICP备案查询：<https://icp.show/>
+1.  天狼星框架：<https://www.siriusbot.cn/>
+2.  镜芯API：<https://api2.wer.plus/>
+3.  林枫云_站长首选云服务器：<https://www.dkdun.cn/>
+4.  ICP备案查询：<https://icp.show/>

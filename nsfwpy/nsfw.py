@@ -40,7 +40,7 @@ class NSFWDetectorONNX:
         }
     }
     
-    def __init__(self, model_path=None, model_type='d'):
+    def __init__(self, model_path=None, model_type='d',device='auto'):
         """
         初始化NSFW检测器(ONNX版本)
         
@@ -73,45 +73,74 @@ class NSFWDetectorONNX:
         else:
             self.image_dim = 224
         
-        # 获取所有可用的 providers
-        available_providers = ort.get_available_providers()
+        # 配置推理设备
+        self.device = device.lower()
+        self.providers = self._get_execution_providers()
         
-        # 根据可用性动态构建 providers 列表
-        providers = []
+        # 创建ONNX运行时会话
+        sess_options = ort.SessionOptions()
+        sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
+        self.session = ort.InferenceSession(self.model_path, sess_options, providers=self.providers)
         
-        # 优先使用 CUDA（如果可用）
-        if 'CUDAExecutionProvider' in available_providers:
-            providers.append(('CUDAExecutionProvider', {
-                "cudnn_conv_algo_search": "EXHAUSTIVE",
-            }))
-        
-        # 总是添加 CPU 作为后备
-        if 'CPUExecutionProvider' in available_providers:
-            providers.append('CPUExecutionProvider')
-        
-        # 如果没有可用的 provider，使用默认值
-        if not providers:
-            providers = None
-
-        # 优化 Session 配置
-        options = ort.SessionOptions()
-        options.intra_op_num_threads = 4
-        
-        # 只在使用 CUDA 时设置 CUDA 相关配置
-        if 'CUDAExecutionProvider' in available_providers:
-            options.add_session_config_entry("session.cuda.mem_limit", "1073741824")
-            options.add_session_config_entry("session.dynamic_blocking", "true")
-            options.add_session_config_entry("session.use_device_allocator_for_initializers", "1")
-        
-        options.enable_cpu_mem_arena = False
-        options.enable_mem_pattern = False
-        
-        # 创建推理会话
-        self.session = ort.InferenceSession(self.model_path, sess_options=options, providers=providers)
-        
+        # 获取输入名称
         self.input_name = self.session.get_inputs()[0].name
+
+        # 获取输出名称
         self.output_names = [output.name for output in self.session.get_outputs()]
 
+    def _get_model_path(self):
+        """根据平台获取缓存路径，检查模型文件是否存在，不存在则下载"""
+        # 首先检查环境变量
+        env_model_path = os.environ.get("NSFW_ONNX_MODEL")
+        if env_model_path:
+            # 如果环境变量指定的是目录而非文件，则在目录下查找model.onnx
+            if os.path.isdir(env_model_path):
+                model_path = os.path.join(env_model_path, self.MODEL_CONFIGS[self.model_type]['filename'])
+            else:
+                model_path = env_model_path
+                
+            if os.path.exists(model_path):
+                return model_path
+                
+        # 确定平台相关的用户缓存目录
+        system = platform.system()
+        if system == "Windows":
+            cache_dir = os.path.join(os.environ.get("LOCALAPPDATA"), "nsfwpy")
+        elif system == "Darwin":  # macOS
+            cache_dir = os.path.join(os.path.expanduser("~"), "Library", "Caches", "nsfwpy")
+        else:  # Linux和其他系统
+            cache_dir = os.path.join(os.path.expanduser("~"), ".cache", "nsfwpy")
+        
+        # 确保目录存在
+        os.makedirs(cache_dir, exist_ok=True)
+        
+        model_path = os.path.join(cache_dir, self.MODEL_CONFIGS[self.model_type]['filename'])
+        # 检查模型文件是否存在，不存在则下载
+        if not os.path.exists(model_path):
+            print(f"ONNX模型文件不存在，正在下载到 {model_path}...")
+            try:
+                # 获取原始URL
+                original_url = self.MODEL_CONFIGS[self.model_type]['url']
+                # 如果在中国，使用代理URL
+                download_url = self.get_proxied_github_url(original_url)
+                print(f"下载地址: {download_url}")
+                # 下载文件
+                self._download_file(download_url, model_path)
+                print("模型下载完成")
+            except Exception as e:
+                raise ValueError(f"模型下载失败: {e}")
+        
+        return model_path
+    
+    def _download_file(self, url, destination):
+        """从指定URL下载文件到目标路径"""
+        try:
+            with urllib.request.urlopen(url) as response:
+                with open(destination, "wb") as f:
+                    f.write(response.read())
+        except Exception as e:
+            raise ValueError(f"下载失败: {e}")
+    
     @staticmethod
     def is_user_in_china():
         """检测用户是否在中国大陆"""
@@ -163,86 +192,60 @@ class NSFWDetectorONNX:
         
         # 使用默认镜像服务
         return original_url.replace("https://github.com", "https://ghproxy.cn/https://github.com")
-
-    def _get_model_path(self):
-        """根据平台获取缓存路径，检查模型文件是否存在，不存在则下载"""
-        # 首先检查环境变量
-        env_model_path = os.environ.get("NSFW_ONNX_MODEL")
-        if env_model_path:
-            # 如果环境变量指定的是目录而非文件，则在目录下查找model.onnx
-            if os.path.isdir(env_model_path):
-                model_path = os.path.join(env_model_path, self.MODEL_CONFIGS[self.model_type]['filename'])
-            else:
-                model_path = env_model_path
-                
-            if os.path.exists(model_path):
-                return model_path
-                
-        # 确定平台相关的用户缓存目录
-        system = platform.system()
-        if system == "Windows":
-            cache_dir = os.path.join(os.environ.get("LOCALAPPDATA"), "nsfwpy")
-        elif system == "Darwin":  # macOS
-            cache_dir = os.path.join(os.path.expanduser("~"), "Library", "Caches", "nsfwpy")
-        else:  # Linux和其他系统
-            cache_dir = os.path.join(os.path.expanduser("~"), ".cache", "nsfwpy")
-        
-        # 确保目录存在
-        os.makedirs(cache_dir, exist_ok=True)
-        
-        model_path = os.path.join(cache_dir, self.MODEL_CONFIGS[self.model_type]['filename'])
-        # 检查模型文件是否存在，不存在则下载
-        if not os.path.exists(model_path):
-            print(f"ONNX模型文件不存在，正在下载到 {model_path}...")
-            try:
-                # 获取原始URL
-                original_url = self.MODEL_CONFIGS[self.model_type]['url']
-                # 如果在中国，使用代理URL
-                download_url = self.get_proxied_github_url(original_url)
-                print(f"下载地址: {download_url}")
-                # 下载文件
-                self._download_file(download_url, model_path)
-                print("✓ 模型下载完成")
-            except Exception as e:
-                raise ValueError(f"模型下载失败: {e}")
-        
-        return model_path
     
-    def _download_file(self, url, destination):
-        """从指定URL下载文件到目标路径，带进度显示"""
-        try:
-            req = urllib.request.Request(
-                url,
-                headers={'User-Agent': 'Mozilla/5.0'}
-            )
+    def _get_execution_providers(self):
+        """
+        根据设备配置获取ONNX Runtime执行提供程序列表
+        
+        返回:
+            按优先级排序的执行提供程序列表
+        """
+        available_providers = ort.get_available_providers()
+        providers = []
+        
+        if self.device == 'auto':
+            # 自动选择最佳可用设备，按性能优先级排序
+            priority_providers = [
+                'TensorrtExecutionProvider',
+                'CUDAExecutionProvider',
+                'DmlExecutionProvider',
+                'CoreMLExecutionProvider',
+                'OpenVINOExecutionProvider',
+            ]
+            for provider in priority_providers:
+                if provider in available_providers:
+                    providers.append(provider)
+                    break  # 使用找到的第一个硬件加速提供程序
+                    
+        elif self.device == 'cpu':
+            pass  # 只使用CPU
             
-            with urllib.request.urlopen(req, timeout=30) as response:
-                total_size = int(response.headers.get('Content-Length', 0))
+        elif self.device == 'cuda':
+            if 'CUDAExecutionProvider' in available_providers:
+                providers.append('CUDAExecutionProvider')
                 
-                with open(destination, "wb") as f:
-                    if total_size > 0:
-                        # 带进度显示
-                        downloaded = 0
-                        block_size = 8192
-                        while True:
-                            buffer = response.read(block_size)
-                            if not buffer:
-                                break
-                            downloaded += len(buffer)
-                            f.write(buffer)
-                            
-                            # 显示进度
-                            progress = (downloaded / total_size) * 100
-                            print(f'\r下载进度: {progress:.1f}% ({downloaded}/{total_size} 字节)', end='', flush=True)
-                        print()  # 换行
-                    else:
-                        # 没有Content-Length，直接下载
-                        f.write(response.read())
-        except Exception as e:
-            # 删除不完整的文件
-            if os.path.exists(destination):
-                os.remove(destination)
-            raise ValueError(f"下载失败: {e}")
+        elif self.device == 'tensorrt':
+            if 'TensorrtExecutionProvider' in available_providers:
+                providers.extend(['TensorrtExecutionProvider', 'CUDAExecutionProvider'])
+            elif 'CUDAExecutionProvider' in available_providers:
+                providers.append('CUDAExecutionProvider')
+                    
+        elif self.device == 'dml':
+            if 'DmlExecutionProvider' in available_providers:
+                providers.append('DmlExecutionProvider')
+                
+        elif self.device == 'coreml':
+            if 'CoreMLExecutionProvider' in available_providers:
+                providers.append('CoreMLExecutionProvider')
+                
+        elif self.device == 'openvino':
+            if 'OpenVINOExecutionProvider' in available_providers:
+                providers.append('OpenVINOExecutionProvider')
+                
+        if 'CPUExecutionProvider' not in providers:
+            providers.append('CPUExecutionProvider')
+        
+        return providers
 
     def _process_gif(self, gif_image):
         """处理GIF图像，对每一帧进行分析并返回平均值"""

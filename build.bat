@@ -1,9 +1,5 @@
-@echo off
-REM 使用 uv 安装依赖和构建工具
-REM powershell -c "irm https://astral.sh/uv/install.ps1 | iex"
-REM uv pip install --system -r pyproject.toml
-REM uv pip install --system nuitka ordered-set zstandard
-
+# uv add nuitka
+# uv sync
 uv run python -m nuitka --standalone ^
     --onefile ^
     --output-dir=dist ^

@@ -9,25 +9,19 @@ jobs:
   build-publish:
     runs-on: ubuntu-20.04
     steps:
-      - uses: actions/checkout@v4
-      
-      - name: Install uv
-        uses: astral-sh/setup-uv@v4
+      - uses: actions/checkout@v2
+      - name: Set up Python 3.10.9
+        uses: actions/setup-python@v2
         with:
-          enable-cache: true
-      
-      - name: Set up Python 3.10
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.10"
-      
-      - name: Build package
+          python-version: 3.10.9
+      - name: Install dependencies
         run: |
-          uv build
-      
-      - name: Publish to PyPI
+          python -m pip install --upgrade pip
+          pip install setuptools wheel twine
+      - name: Build and publish
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI }}
         run: |
-          uv tool run twine upload dist/* --skip-existing
+          python setup.py sdist bdist_wheel
+          twine upload dist/*

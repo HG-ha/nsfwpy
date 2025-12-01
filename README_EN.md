@@ -13,6 +13,8 @@ A lightweight Python library that utilizes deep learning models for image conten
 - Supports Windows and other operating systems
 - Automatic model download and caching
 - Pre-compiled versions available
+- **Hardware acceleration support** (CUDA, TensorRT, DirectML, CoreML, OpenVINO)
+- **Smart detection for users in China with automatic mirror acceleration**
 
 ## Installation
 
@@ -64,17 +66,57 @@ A lightweight Python library that utilizes deep learning models for image conten
 
 ## Usage
 
-- Python API
+### Hardware Acceleration Support
 
-    ```python
-    from nsfwpy import NSFW
+nsfwpy supports multiple hardware acceleration options to improve inference performance:
 
-    # Initialize detector (first run will automatically download the model)
-    detector = NSFW()
+```python
+from nsfwpy import NSFW
 
-    # Predict single image
-    result = detector.predict_image("path/to/image.jpg")
-    print(result)
+# Auto-select the best available device (recommended)
+detector = NSFW(device='auto')
+
+# Use specific device
+detector_cuda = NSFW(device='cuda')      # NVIDIA GPU (CUDA)
+detector_tensorrt = NSFW(device='tensorrt')  # NVIDIA GPU (TensorRT)
+detector_dml = NSFW(device='dml')        # Windows DirectML
+detector_coreml = NSFW(device='coreml')  # Apple CoreML (macOS/iOS)
+detector_openvino = NSFW(device='openvino')  # Intel OpenVINO
+detector_cpu = NSFW(device='cpu')        # CPU only
+```
+
+**Supported acceleration backends:**
+- `auto`: Automatically select the best device (default)
+- `cuda`: NVIDIA CUDA
+- `tensorrt`: NVIDIA TensorRT
+- `dml`: DirectML (Windows)
+- `coreml`: Apple CoreML (macOS/iOS)
+- `openvino`: Intel OpenVINO
+- `cpu`: CPU (no acceleration)
+
+### Environment Variables
+
+```bash
+# Model path configuration
+NSFWPY_ONNX_MODEL=/path/to/model.onnx  # Custom model path
+NSFW_ONNX_MODEL=/path/to/model.onnx    # Alternative environment variable
+
+# China mirror acceleration (auto-detected, can be manually configured)
+NSFWPY_USE_CHINA_MIRROR=1              # Force use of China mirror (1/true/yes)
+NSFWPY_GITHUB_MIRROR=https://ghproxy.cn  # Custom mirror address
+```
+
+### Python API
+
+```python
+from nsfwpy import NSFW
+
+# Initialize detector (first run will automatically download the model)
+detector = NSFW()
+
+# Predict single image
+result = detector.predict_image("path/to/image.jpg")
+print(result)
 
     # Predict PIL image
     from PIL import Image

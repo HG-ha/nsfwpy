@@ -47,7 +47,3 @@ temp/
 # 敏感配置文件
 config.json
 secrets.json
-
-# uv
-.uv/
-.python-version.bak

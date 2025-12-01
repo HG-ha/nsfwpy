@@ -1,15 +1,8 @@
 # -*- coding: utf-8 -*-
 import argparse
 import os
-import sys
-import io
 import uvicorn
 from pathlib import Path
-
-# 强制设置标准输出/错误输出为 UTF-8 编码
-if hasattr(sys.stdout, 'buffer') and sys.stdout.encoding != 'utf-8':
-    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
-    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 
 def main():
     parser = argparse.ArgumentParser(description="启动NSFW检测API服务器或命令行工具")
