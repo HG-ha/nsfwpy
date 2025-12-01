@@ -1,5 +1,5 @@
-# uv add nuitka
-# uv sync
+@REM uv add nuitka
+@REM uv sync
 uv run python -m nuitka --standalone ^
     --onefile ^
     --output-dir=dist ^
