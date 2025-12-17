@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from typing import List, Dict, Optional
 import os
+import gc
 from pydantic import BaseModel
 from fastapi import FastAPI, File, UploadFile, HTTPException, Form
 from fastapi.middleware.cors import CORSMiddleware
@@ -65,6 +66,18 @@ async def startup_event():
     # 在服务启动时预加载模型
     get_detector()
 
+@app.on_event("shutdown")
+async def shutdown_event():
+    # 在服务关闭时清理资源
+    global global_detector
+    if global_detector is not None:
+        try:
+            del global_detector
+            global_detector = None
+        except:
+            pass
+    gc.collect()
+
 # 辅助函数：从上传文件读取图像
 async def read_image_file(file: UploadFile):
     try:
@@ -78,6 +91,7 @@ async def classify_image(image: UploadFile = File(...)):
     """
     对单张上传的图像文件进行NSFW分类
     """
+    image_bytes = None
     try:
         detector = get_detector()
         image_bytes = await read_image_file(image)
@@ -87,6 +101,8 @@ async def classify_image(image: UploadFile = File(...)):
         await image.close()
         # 清理内存
         del image_bytes
+        image_bytes = None
+        gc.collect()
 
         if not result:
             raise HTTPException(status_code=500, detail="图像处理失败")
@@ -95,6 +111,9 @@ async def classify_image(image: UploadFile = File(...)):
     except Exception as e:
         if image:
             await image.close()
+        if image_bytes:
+            del image_bytes
+        gc.collect()
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/classify-many", response_model=List[Dict[str, float]])
@@ -106,7 +125,8 @@ async def classify_many_images(images: List[UploadFile] = File(...)):
         detector = get_detector()
         results = []
         
-        for image in images:
+        for idx, image in enumerate(images):
+            image_bytes = None
             try:
                 image_bytes = await read_image_file(image)
                 result = await detector.predict_from_bytes_async(image_bytes)
@@ -115,18 +135,30 @@ async def classify_many_images(images: List[UploadFile] = File(...)):
                 await image.close()
                 # 清理内存
                 del image_bytes
+                image_bytes = None
 
                 if result:
                     results.append(result)
                 else:
                     results.append({"error": "处理失败"})
+                    
+                # 每处理几张图片后进行一次垃圾回收
+                if idx % 5 == 0:
+                    gc.collect()
+                    
             except Exception as e:
                 if image:
                     await image.close()
+                if image_bytes:
+                    del image_bytes
                 results.append({"error": str(e)})
-                
+                gc.collect()
+        
+        # 最后进行一次完整的垃圾回收
+        gc.collect()
         return results
     except Exception as e:
+        gc.collect()
         raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/classify-video", response_model=Dict)
@@ -141,6 +173,8 @@ async def classify_video(
     - sample_rate: 采样率，0-1之间，如0.1表示每10帧取1帧
     - max_frames: 最大处理帧数，限制处理量
     """
+    video_content = None
+    temp_file = None
     try:
         detector = get_detector()
         
@@ -158,7 +192,9 @@ async def classify_video(
             
             # 释放内存
             del video_content
+            video_content = None
             await video.close()
+            gc.collect()
             
             # 处理视频
             result = await detector.predict_video_async(
@@ -169,17 +205,57 @@ async def classify_video(
             
             if not result:
                 raise HTTPException(status_code=500, detail="视频处理失败")
-                
+            
+            # 在返回前强制垃圾回收
+            gc.collect()
             return result
         finally:
             # 清理临时文件
-            if os.path.exists(temp_file):
+            if temp_file and os.path.exists(temp_file):
                 try:
                     os.remove(temp_file)
                 except:
                     pass
+            gc.collect()
     
     except Exception as e:
         if video:
             await video.close()
+        if video_content:
+            del video_content
+        gc.collect()
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/cleanup-cache")
+async def cleanup_cache():
+    """
+    手动触发内存和显存清理
+    建议在处理大量图片或视频后调用此接口释放资源
+    """
+    try:
+        detector = get_detector()
+        detector.cleanup_session_cache()
+        gc.collect()
+        return {
+            "status": "success",
+            "message": "缓存已清理",
+            "inference_count": detector._inference_count
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/health")
+async def health_check():
+    """
+    健康检查接口，返回推理统计信息
+    """
+    try:
+        detector = get_detector()
+        return {
+            "status": "healthy",
+            "inference_count": detector._inference_count,
+            "cleanup_interval": detector._cleanup_interval,
+            "providers": detector.providers
+        }
+    except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

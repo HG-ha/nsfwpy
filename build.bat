@@ -25,7 +25,8 @@ uv run python -m nuitka --standalone ^
     --noinclude-custom-mode=sklearn:error ^
     --noinclude-custom-mode=tensorflow:error ^
     --noinclude-custom-mode=torch:error ^
-    --lto=yes ^
+    --lto=no ^
+    --onefile-tempdir-spec={TEMP}/onefile_{PID}_{TIME} ^
     --remove-output ^
     --noinclude-data-files="*.py;*.c;*.h;*.txt;*.md;*.rst;*.css;*.html;*.js;*.git*;*.pkl" ^
     --follow-imports ^

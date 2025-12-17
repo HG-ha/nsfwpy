@@ -1,0 +1,279 @@
+name: Build and Release Executables
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*'
+
+jobs:
+  build-linux:
+    name: Build Linux x86_64
+    runs-on: ubuntu-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装系统依赖
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y patchelf
+
+      - name: 安装 uv
+        run: |
+          curl -LsSf https://astral.sh/uv/install.sh | sh
+          echo "$HOME/.cargo/bin" >> $GITHUB_PATH
+
+      - name: 安装 Python 依赖
+        run: |
+          uv sync
+
+      - name: 验证 Nuitka 安装
+        run: |
+          uv run python -m nuitka --version
+          echo "✅ Nuitka 安装成功"
+
+      - name: 编译 Linux 可执行文件
+        run: |
+          chmod +x build.sh
+          bash build.sh
+
+      - name: 重命名可执行文件
+        run: |
+          cd dist
+          # 查找生成的可执行文件（可能是 nsfwpy 或 nsfwpy.bin）
+          if [ -f nsfwpy.bin ]; then
+            EXEC_FILE=nsfwpy.bin
+          elif [ -f nsfwpy ]; then
+            EXEC_FILE=nsfwpy
+          else
+            echo "找不到可执行文件"
+            ls -la
+            exit 1
+          fi
+          
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [ "$GITHUB_REF_TYPE" = "tag" ]; then
+            mv "$EXEC_FILE" "nsfwpy-${VERSION}-linux-x86_64"
+          else
+            mv "$EXEC_FILE" "nsfwpy-latest-linux-x86_64"
+          fi
+          
+          # 添加执行权限
+          chmod +x nsfwpy-*-linux-x86_64
+
+      - name: 生成校验和
+        run: |
+          cd dist
+          sha256sum nsfwpy-*-linux-x86_64 > nsfwpy-linux-x86_64.sha256
+          cat nsfwpy-linux-x86_64.sha256
+
+      - name: 生成构建摘要
+        run: |
+          echo "## Linux x86_64 构建成功 ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 文件信息" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          ls -lh dist/nsfwpy-*-linux-x86_64 >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### SHA256 校验和" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          cat dist/nsfwpy-linux-x86_64.sha256 >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: nsfwpy-linux-x86_64
+          path: |
+            dist/nsfwpy-*-linux-x86_64
+            dist/nsfwpy-linux-x86_64.sha256
+          retention-days: 7
+
+  build-windows:
+    name: Build Windows x86_64
+    runs-on: windows-latest
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 安装 uv
+        run: |
+          irm https://astral.sh/uv/install.ps1 | iex
+          echo "$env:USERPROFILE\.cargo\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+
+      - name: 安装 Python 依赖
+        run: |
+          uv sync
+
+      - name: 验证 Nuitka 安装
+        run: |
+          uv run python -m nuitka --version
+          Write-Host "✅ Nuitka 安装成功"
+
+      - name: 编译 Windows 可执行文件
+        run: |
+          .\build.bat
+
+      - name: 重命名可执行文件
+        run: |
+          cd dist
+          if (Test-Path "nsfwpy.exe") {
+            $version = "$env:GITHUB_REF_NAME" -replace '^v', ''
+            if ($env:GITHUB_REF_TYPE -eq "tag") {
+              Rename-Item "nsfwpy.exe" "nsfwpy-$version-win-x86_64.exe"
+            } else {
+              Rename-Item "nsfwpy.exe" "nsfwpy-latest-win-x86_64.exe"
+            }
+          }
+
+      - name: 生成校验和
+        run: |
+          cd dist
+          Get-FileHash -Algorithm SHA256 nsfwpy-*-win-x86_64.exe | Format-List | Out-File -FilePath nsfwpy-windows-x86_64.sha256
+          Get-Content nsfwpy-windows-x86_64.sha256
+
+      - name: 生成构建摘要
+        run: |
+          "## Windows x86_64 构建成功 ✅" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8
+          "" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          "### 文件信息" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          "``````" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          Get-ChildItem dist\nsfwpy-*-win-x86_64.exe | Format-Table Name, Length, LastWriteTime | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          "``````" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          "" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          "### SHA256 校验和" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          "``````" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          Get-Content dist\nsfwpy-windows-x86_64.sha256 | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+          "``````" | Out-File -FilePath $env:GITHUB_STEP_SUMMARY -Encoding utf8 -Append
+
+      - name: 上传构建产物
+        uses: actions/upload-artifact@v4
+        with:
+          name: nsfwpy-windows-x86_64
+          path: |
+            dist/nsfwpy-*-win-x86_64.exe
+            dist/nsfwpy-windows-x86_64.sha256
+          retention-days: 7
+
+  upload-latest:
+    name: Upload Latest Build (main branch)
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: 下载所有构建产物
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: 显示构建产物
+        run: |
+          echo "=== Latest 构建产物列表 ==="
+          find artifacts -type f -exec ls -lh {} \;
+          
+      - name: 生成构建摘要
+        run: |
+          echo "## 最新构建完成 (main分支) ✅" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "构建产物已保存为 artifacts，保留7天。" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 文件列表" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          find artifacts -type f -name "nsfwpy-*" ! -name "*.sha256" -exec ls -lh {} \; >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  create-release:
+    name: Create Release
+    needs: [build-linux, build-windows]
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/v')
+    permissions:
+      contents: write
+    steps:
+      - name: 检出代码
+        uses: actions/checkout@v4
+
+      - name: 下载所有构建产物
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: 显示构建产物
+        run: |
+          echo "=== 构建产物列表 ==="
+          find artifacts -type f -exec ls -lh {} \;
+          echo ""
+          echo "=== SHA256 校验和 ==="
+          find artifacts -name "*.sha256" -exec cat {} \;
+
+      - name: 准备 Release 说明
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          cat > release_notes.md << EOF
+          # NSFWpy $VERSION
+          
+          ## 下载
+          
+          ### Linux x86_64
+          - [nsfwpy-${VERSION}-linux-x86_64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nsfwpy-${VERSION}-linux-x86_64)
+          
+          ### Windows x86_64
+          - [nsfwpy-${VERSION}-win-x86_64.exe](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nsfwpy-${VERSION}-win-x86_64.exe)
+          
+          ## 校验和
+          
+          下载后请验证文件完整性：
+          
+          \`\`\`bash
+          # Linux
+          sha256sum -c nsfwpy-linux-x86_64.sha256
+          
+          # Windows (PowerShell)
+          Get-FileHash nsfwpy-${VERSION}-win-x86_64.exe -Algorithm SHA256
+          \`\`\`
+          
+          ## 安装
+          
+          ### Linux
+          \`\`\`bash
+          chmod +x nsfwpy-${VERSION}-linux-x86_64
+          sudo mv nsfwpy-${VERSION}-linux-x86_64 /usr/local/bin/nsfwpy
+          \`\`\`
+          
+          ### Windows
+          将 \`nsfwpy-${VERSION}-win-x86_64.exe\` 重命名为 \`nsfwpy.exe\` 并添加到 PATH 环境变量
+          
+          ## 使用方法
+          
+          \`\`\`bash
+          # 检测图片
+          nsfwpy --input image.jpg
+          
+          # 检测视频
+          nsfwpy --input video.mp4 --sample-rate 0.1 --max-frames 100
+          
+          # 启动Web API服务
+          nsfwpy --web --host 0.0.0.0 --port 8000
+          \`\`\`
+          
+          ---
+          
+          EOF
+          cat release_notes.md
+
+      - name: 创建 Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: Release ${{ github.ref_name }}
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+          files: |
+            artifacts/nsfwpy-linux-x86_64/*
+            artifacts/nsfwpy-windows-x86_64/*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+

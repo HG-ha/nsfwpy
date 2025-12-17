@@ -12,4 +12,5 @@ dependencies = [
     "onnxruntime>=1.15.0",
     "python-multipart>=0.0.6",
     "opencv-python-headless>=4.8.0",
+    "nuitka>=2.8.9",
 ]
