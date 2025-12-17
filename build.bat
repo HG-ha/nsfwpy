@@ -16,7 +16,7 @@ uv run python -m nuitka --standalone ^
     --include-module=nsfwpy.server ^
     --include-module=nsfwpy.nsfw ^
     --include-module=nsfwpy.cli ^
-    --nofollow-import-to=tkinter,matplotlib,scipy,pandas,tests,distutils,setuptools,pip,wheel,sphinx,pytest ^
+    --nofollow-import-to=tkinter,matplotlib,scipy,pandas,sympy,mpmath,coloredlogs,colorama,humanfriendly,pyreadline3,tests,distutils,setuptools,pip,wheel,sphinx,pytest ^
     --assume-yes-for-downloads ^
     --plugin-enable=numpy ^
     --enable-plugin=anti-bloat ^
