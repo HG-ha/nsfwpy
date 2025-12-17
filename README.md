@@ -19,51 +19,136 @@
 
 ## 安装
 
-- 通过pip安装
+### 📊 快速选择安装方式
 
-    ```bash
-    pip install nsfwpy
-    ```
+| 使用场景 | 推荐方式 | 全局可用 | 需要Python |
+|---------|---------|---------|-----------|
+| **开发/测试** | pip 安装 | ❌ | ✅ |
+| **个人日常使用** | pipx 安装 | ✅ | ✅ |
+| **服务器部署** | Docker 或预编译版 | ✅ | ❌ |
+| **无 Python 环境** | 预编译版本 | ✅ | ❌ |
+| **多项目开发** | 虚拟环境 + pip | ❌ | ✅ |
 
-- 从源码安装
+### 方式1: pip 安装（推荐，适合开发使用）
 
-    ```bash
-    git clone https://github.com/HG-ha/nsfwpy.git
-    cd nsfwpy
-    pip install -e .
-    ```
+```bash
+pip install nsfwpy
+```
 
-- Docker（默认使用模型：model.onnx）
-    - `docker run -p 8000:8000 yiminger/nsfwpy`
-    - 使用指定模型启动
-        - `d` 默认模型
-            ```
-            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/model.onnx -p 8000:8000 yiminger/nsfwpy
-            ```
-        - `m2` 模型（NSFWJS mobilenet_v2）
-            ```
-            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/m2model.onnx -p 8000:8000 yiminger/nsfwpy
-            ```
-        - `i3` 模型（NSFWJS inception_v3），速度比其他模型慢一倍
-            ```
-            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/i3model.onnx -p 8000:8000 yiminger/nsfwpy
-            ```
+**注意：** 这种方式安装后，`nsfwpy` 命令只在当前 Python 环境中可用。如果使用虚拟环境，需要先激活环境才能使用命令。
 
-- 使用预编译版本（开箱即用）
-    - 请前往 [Release](https://github.com/HG-ha/nsfwpy/releases) 下载对应平台的预编译版本。
-    - windows：在cmd中输入 `nsfwpy.exe`
-    - linux：`chmod +x nsfwpy && ./nsfwpy`
+### 方式2: pipx 安装（推荐，全局使用）
 
-- Termux
-    ```bash
-    pkg install -y build-essential cmake ninja patchelf python3 git python-pip python-onnxruntime python-pillow rust
-    git clone https://github.com/HG-ha/nsfwpy.git && cd nsfwpy
-    pip install -e .
-    nsfwpy --help
-    ```
+pipx 会为 nsfwpy 创建独立的虚拟环境，同时让命令全局可用，是最佳的全局安装方案：
 
-### 编译其他平台版本
-- 参考 `build.bat | build.sh`
+```bash
+# 安装 pipx（如果还没有）
+pip install pipx
+pipx ensurepath
+
+# 使用 pipx 安装 nsfwpy
+pipx install nsfwpy
+
+# 现在可以在任何地方使用 nsfwpy 命令
+nsfwpy --help
+```
+
+**优点：**
+- ✅ 全局可用，无需激活环境
+- ✅ 依赖隔离，不影响其他项目
+- ✅ 易于管理和升级
+
+### 方式3: 系统级全局安装（不推荐）
+
+```bash
+# 直接安装到系统 Python（可能需要 sudo）
+pip install --user nsfwpy  # 用户级安装
+# 或
+sudo pip install nsfwpy    # 系统级安装（不推荐）
+```
+
+**警告：** 可能与系统包管理器冲突，建议使用 pipx 代替。
+
+### 方式4: 从源码安装
+
+```bash
+git clone https://github.com/HG-ha/nsfwpy.git
+cd nsfwpy
+pip install -e .
+```
+
+### 方式5: 预编译版本（推荐，无需 Python 环境）
+
+预编译版本无需安装 Python，开箱即用，且可全局使用：
+
+1. **下载**：前往 [Release](https://github.com/HG-ha/nsfwpy/releases) 下载对应平台的版本
+
+2. **安装为全局命令**：
+
+   **Linux/macOS:**
+   ```bash
+   # 下载后
+   chmod +x nsfwpy-*-linux-x86_64
+   sudo mv nsfwpy-*-linux-x86_64 /usr/local/bin/nsfwpy
+   
+   # 现在可以在任何地方使用
+   nsfwpy --help
+   ```
+
+   **Windows:**
+   ```powershell
+   # 方法1: 添加到 PATH（推荐）
+   # 1. 将 nsfwpy.exe 放到一个目录，如 C:\Program Files\nsfwpy\
+   # 2. 将该目录添加到系统 PATH 环境变量
+   # 3. 重启命令行，即可在任何地方使用 nsfwpy 命令
+
+   # 方法2: 直接使用完整路径
+   C:\path\to\nsfwpy.exe --help
+   ```
+
+**优点：**
+- ✅ 无需安装 Python
+- ✅ 无依赖冲突
+- ✅ 下载即用
+- ✅ 可全局使用
+
+### 方式6: Docker（推荐，服务器部署）
+
+```bash
+# 运行 API 服务
+docker run -p 8000:8000 yiminger/nsfwpy
+
+# 使用指定模型
+docker run -e NSFWPY_MODEL_TYPE=m2 -p 8000:8000 yiminger/nsfwpy
+```
+
+### 方式7: Termux (Android)
+
+```bash
+pkg install -y build-essential cmake ninja patchelf python3 git python-pip python-onnxruntime python-pillow rust
+git clone https://github.com/HG-ha/nsfwpy.git && cd nsfwpy
+pip install -e .
+nsfwpy --help
+```
+
+### ✅ 验证安装
+
+安装完成后，验证是否成功：
+
+```bash
+# 查看版本
+nsfwpy --help
+
+# 测试图片检测
+nsfwpy --input test.jpg
+
+# 启动 Web 服务测试
+nsfwpy --web --port 8000
+```
+
+### 🔧 编译其他平台版本
+
+参考 `build.bat | build.sh` 脚本自行编译
 
 
 ## 使用方法

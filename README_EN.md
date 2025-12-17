@@ -18,51 +18,136 @@ A lightweight Python library that utilizes deep learning models for image conten
 
 ## Installation
 
-- Via pip
+### 📊 Quick Installation Guide
 
-    ```bash
-    pip install nsfwpy
-    ```
+| Use Case | Recommended Method | Globally Available | Requires Python |
+|----------|-------------------|-------------------|-----------------|
+| **Development/Testing** | pip install | ❌ | ✅ |
+| **Personal Daily Use** | pipx install | ✅ | ✅ |
+| **Server Deployment** | Docker or Pre-compiled | ✅ | ❌ |
+| **No Python Environment** | Pre-compiled version | ✅ | ❌ |
+| **Multi-project Development** | Virtual env + pip | ❌ | ✅ |
 
-- From source
+### Method 1: pip Install (Recommended for development)
 
-    ```bash
-    git clone https://github.com/HG-ha/nsfwpy.git
-    cd nsfwpy
-    pip install -e .
-    ```
-    
-- Docker (Default model: model.onnx)
-    - `docker run -p 8000:8000 yiminger/nsfwpy`
-    - Start with specific model:
-        - `d` Default model
-            ```
-            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/model.onnx -p 8000:8000 yiminger/nsfwpy
-            ```
-        - `m2` model (NSFWJS mobilenet_v2)
-            ```
-            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/m2model.onnx -p 8000:8000 yiminger/nsfwpy
-            ```
-        - `i3` model (NSFWJS inception_v3), It takes twice as long as the others.
-            ```
-            docker run -e NSFWPY_ONNX_MODEL=/home/appuser/.cache/nsfwpy/i3model.onnx -p 8000:8000 yiminger/nsfwpy
-            ```
+```bash
+pip install nsfwpy
+```
 
-- Using pre-compiled version (ready to use)
-    - Please visit [Release](https://github.com/HG-ha/nsfwpy/releases) to download the pre-compiled version for your platform.
-    - Windows: Enter `nsfwpy.exe` in cmd
-    - Linux: `chmod +x nsfwpy && ./nsfwpy`
+**Note:** With this method, the `nsfwpy` command is only available in the current Python environment. If using a virtual environment, you need to activate it first.
 
-- Termux
-    ```bash
-    pkg install -y build-essential cmake ninja patchelf python3 git python-pip python-onnxruntime python-pillow rust
-    git clone https://github.com/HG-ha/nsfwpy.git && cd nsfwpy
-    pip install -e .
-    nsfwpy --help
-    ```
-    
-### Building for other platforms
-- Refer to `build.bat | build.sh`
+### Method 2: pipx Install (Recommended for global use)
+
+pipx creates an isolated environment for nsfwpy while making the command globally available - the best solution for global installation:
+
+```bash
+# Install pipx (if not already installed)
+pip install pipx
+pipx ensurepath
+
+# Install nsfwpy with pipx
+pipx install nsfwpy
+
+# Now you can use nsfwpy anywhere
+nsfwpy --help
+```
+
+**Advantages:**
+- ✅ Globally available without activating environments
+- ✅ Isolated dependencies, no conflicts
+- ✅ Easy to manage and upgrade
+
+### Method 3: System-wide Installation (Not recommended)
+
+```bash
+# Install directly to system Python (may require sudo)
+pip install --user nsfwpy  # User-level installation
+# or
+sudo pip install nsfwpy    # System-level installation (not recommended)
+```
+
+**Warning:** May conflict with system package managers. Use pipx instead.
+
+### Method 4: From Source
+
+```bash
+git clone https://github.com/HG-ha/nsfwpy.git
+cd nsfwpy
+pip install -e .
+```
+
+### Method 5: Pre-compiled Version (Recommended, no Python required)
+
+Pre-compiled versions work out of the box without Python installation and can be used globally:
+
+1. **Download**: Visit [Release](https://github.com/HG-ha/nsfwpy/releases) to download the version for your platform
+
+2. **Install as global command**:
+
+   **Linux/macOS:**
+   ```bash
+   # After downloading
+   chmod +x nsfwpy-*-linux-x86_64
+   sudo mv nsfwpy-*-linux-x86_64 /usr/local/bin/nsfwpy
+   
+   # Now you can use it anywhere
+   nsfwpy --help
+   ```
+
+   **Windows:**
+   ```powershell
+   # Method 1: Add to PATH (Recommended)
+   # 1. Place nsfwpy.exe in a directory, e.g., C:\Program Files\nsfwpy\
+   # 2. Add that directory to system PATH environment variable
+   # 3. Restart command prompt, then you can use nsfwpy command anywhere
+
+   # Method 2: Use full path directly
+   C:\path\to\nsfwpy.exe --help
+   ```
+
+**Advantages:**
+- ✅ No Python installation required
+- ✅ No dependency conflicts
+- ✅ Download and use immediately
+- ✅ Globally available
+
+### Method 6: Docker (Recommended for server deployment)
+
+```bash
+# Run API service
+docker run -p 8000:8000 yiminger/nsfwpy
+
+# Use specific model
+docker run -e NSFWPY_MODEL_TYPE=m2 -p 8000:8000 yiminger/nsfwpy
+```
+
+### Method 7: Termux (Android)
+
+```bash
+pkg install -y build-essential cmake ninja patchelf python3 git python-pip python-onnxruntime python-pillow rust
+git clone https://github.com/HG-ha/nsfwpy.git && cd nsfwpy
+pip install -e .
+nsfwpy --help
+```
+
+### ✅ Verify Installation
+
+After installation, verify it works:
+
+```bash
+# Check version
+nsfwpy --help
+
+# Test image detection
+nsfwpy --input test.jpg
+
+# Start Web service test
+nsfwpy --web --port 8000
+```
+
+### 🔧 Building for Other Platforms
+
+Refer to `build.bat | build.sh` scripts for custom compilation
 
 ## Usage
 
