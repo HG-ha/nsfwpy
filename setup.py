@@ -24,7 +24,7 @@ if not is_opencv_installed():
 
 setuptools.setup(
     name="nsfwpy",
-    version="0.1.4.5",
+    version="0.1.5",
     author="YiMing",
     author_email="1790233968@qq.com",
     description="基于OpenNSFW的图像内容检测工具",
