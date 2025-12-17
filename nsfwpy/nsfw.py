@@ -122,9 +122,15 @@ class NSFWDetectorONNX:
         sess_options.enable_mem_reuse = True
         
         # 线程数优化（避免创建过多线程导致内存开销）
-        # 从环境变量读取，默认使用4个线程
-        intra_threads = int(os.environ.get("NSFWPY_INTRA_THREADS", "4"))
-        inter_threads = int(os.environ.get("NSFWPY_INTER_THREADS", "2"))
+        # 自动检测 CPU 核心数并设置合理的默认值
+        cpu_count = os.cpu_count() or 1
+        
+        # 单核 CPU 建议使用 1 个线程，多核 CPU 建议使用核心数的一半（最多4个）
+        default_intra = min(max(cpu_count // 2, 1), 4) if cpu_count > 1 else 1
+        default_inter = min(max(cpu_count // 4, 1), 2) if cpu_count > 2 else 1
+        
+        intra_threads = int(os.environ.get("NSFWPY_INTRA_THREADS", str(default_intra)))
+        inter_threads = int(os.environ.get("NSFWPY_INTER_THREADS", str(default_inter)))
         sess_options.intra_op_num_threads = intra_threads
         sess_options.inter_op_num_threads = inter_threads
         
@@ -200,6 +206,9 @@ class NSFWDetectorONNX:
             "enable_mem_pattern": True,
             "enable_cpu_mem_arena": True,
             "enable_mem_reuse": True,
+            "cpu_cores": os.cpu_count() or 1,
+            "intra_op_threads": self.session.get_session_options().intra_op_num_threads if hasattr(self.session.get_session_options(), 'intra_op_num_threads') else "N/A",
+            "inter_op_threads": self.session.get_session_options().inter_op_num_threads if hasattr(self.session.get_session_options(), 'inter_op_num_threads') else "N/A",
         }
         
         # 如果使用GPU，添加GPU内存配置

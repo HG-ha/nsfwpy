@@ -70,6 +70,20 @@
 
 ### 硬件加速支持
 
+**⚠️ 注意：** 默认安装只包含 CPU 支持。如需使用 GPU 等硬件加速，需要安装对应的 onnxruntime 版本：
+
+```bash
+# NVIDIA GPU (CUDA)
+pip uninstall onnxruntime
+pip install onnxruntime-gpu
+
+# DirectML (Windows GPU)
+pip uninstall onnxruntime
+pip install onnxruntime-directml
+
+# 其他加速后端请参考 ONNX Runtime 官方文档
+```
+
 nsfwpy 支持多种硬件加速选项以提升推理性能：
 
 ```python
@@ -89,23 +103,30 @@ detector_cpu = NSFW(device='cpu')        # CPU only
 
 **支持的加速后端：**
 - `auto`: 自动选择最佳设备（默认）
-- `cuda`: NVIDIA CUDA
-- `tensorrt`: NVIDIA TensorRT
-- `dml`: DirectML (Windows)
+- `cuda`: NVIDIA CUDA（需要安装 onnxruntime-gpu）
+- `tensorrt`: NVIDIA TensorRT（需要安装 onnxruntime-gpu）
+- `dml`: DirectML - Windows GPU（需要安装 onnxruntime-directml）
 - `coreml`: Apple CoreML (macOS/iOS)
 - `openvino`: Intel OpenVINO
-- `cpu`: CPU（无加速）
+- `cpu`: CPU（无需额外安装）
 
 ### 环境变量配置
 
 ```bash
 # 模型路径配置
 NSFWPY_ONNX_MODEL=/path/to/model.onnx  # 自定义模型路径
+NSFWPY_MODEL_TYPE=d                     # 模型类型：d(默认)/m2/i3
 NSFW_ONNX_MODEL=/path/to/model.onnx    # 备用环境变量
 
 # 中国境内镜像加速（自动检测，也可手动配置）
 NSFWPY_USE_CHINA_MIRROR=1              # 强制使用国内镜像（1/true/yes）
 NSFWPY_GITHUB_MIRROR=https://ghproxy.cn  # 自定义镜像地址
+
+# 内存管理配置
+NSFWPY_CLEANUP_INTERVAL=100            # 自动垃圾回收间隔（推理次数），默认100，设为0禁用
+NSFWPY_GPU_MEM_LIMIT=524288000         # GPU显存限制（字节），默认500MB
+NSFWPY_INTRA_THREADS=1                 # ONNX Runtime内部并行线程数，默认自动检测（单核=1，多核=核心数/2，最多4）
+NSFWPY_INTER_THREADS=1                 # ONNX Runtime跨操作并行线程数，默认自动检测（单核=1，多核=核心数/4，最多2）
 ```
 
 ### Python API

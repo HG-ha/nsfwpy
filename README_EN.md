@@ -68,6 +68,20 @@ A lightweight Python library that utilizes deep learning models for image conten
 
 ### Hardware Acceleration Support
 
+**⚠️ Note:** The default installation only includes CPU support. For GPU or other hardware acceleration, you need to install the corresponding onnxruntime version:
+
+```bash
+# NVIDIA GPU (CUDA)
+pip uninstall onnxruntime
+pip install onnxruntime-gpu
+
+# DirectML (Windows GPU)
+pip uninstall onnxruntime
+pip install onnxruntime-directml
+
+# For other acceleration backends, refer to the official ONNX Runtime documentation
+```
+
 nsfwpy supports multiple hardware acceleration options to improve inference performance:
 
 ```python
@@ -87,23 +101,30 @@ detector_cpu = NSFW(device='cpu')        # CPU only
 
 **Supported acceleration backends:**
 - `auto`: Automatically select the best device (default)
-- `cuda`: NVIDIA CUDA
-- `tensorrt`: NVIDIA TensorRT
-- `dml`: DirectML (Windows)
+- `cuda`: NVIDIA CUDA (requires onnxruntime-gpu)
+- `tensorrt`: NVIDIA TensorRT (requires onnxruntime-gpu)
+- `dml`: DirectML - Windows GPU (requires onnxruntime-directml)
 - `coreml`: Apple CoreML (macOS/iOS)
 - `openvino`: Intel OpenVINO
-- `cpu`: CPU (no acceleration)
+- `cpu`: CPU (no additional installation required)
 
 ### Environment Variables
 
 ```bash
 # Model path configuration
 NSFWPY_ONNX_MODEL=/path/to/model.onnx  # Custom model path
+NSFWPY_MODEL_TYPE=d                     # Model type: d(default)/m2/i3
 NSFW_ONNX_MODEL=/path/to/model.onnx    # Alternative environment variable
 
 # China mirror acceleration (auto-detected, can be manually configured)
 NSFWPY_USE_CHINA_MIRROR=1              # Force use of China mirror (1/true/yes)
 NSFWPY_GITHUB_MIRROR=https://ghproxy.cn  # Custom mirror address
+
+# Memory management configuration
+NSFWPY_CLEANUP_INTERVAL=100            # Auto garbage collection interval (inference count), default 100, set to 0 to disable
+NSFWPY_GPU_MEM_LIMIT=524288000         # GPU memory limit (bytes), default 500MB
+NSFWPY_INTRA_THREADS=1                 # ONNX Runtime intra-op parallel threads, auto-detected (single-core=1, multi-core=cores/2, max 4)
+NSFWPY_INTER_THREADS=1                 # ONNX Runtime inter-op parallel threads, auto-detected (single-core=1, multi-core=cores/4, max 2)
 ```
 
 ### Python API
