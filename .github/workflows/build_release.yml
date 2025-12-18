@@ -14,9 +14,6 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-20.04
-            os-name: "Ubuntu 20.04"
-            os-suffix: "ubuntu20"
           - os: ubuntu-22.04
             os-name: "Ubuntu 22.04"
             os-suffix: "ubuntu22"
@@ -250,16 +247,13 @@ jobs:
           
           根据你的系统选择对应版本：
           
-          - **Ubuntu 20.04 / Debian 10+** (GLIBC 2.31+)
-            - [nsfwpy-${VERSION}-linux-x86_64-ubuntu20](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nsfwpy-${VERSION}-linux-x86_64-ubuntu20)
-          
           - **Ubuntu 22.04 / Debian 11+** (GLIBC 2.34+) - 推荐
             - [nsfwpy-${VERSION}-linux-x86_64-ubuntu22](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nsfwpy-${VERSION}-linux-x86_64-ubuntu22)
           
           - **Ubuntu 24.04+** (最新 GLIBC)
             - [nsfwpy-${VERSION}-linux-x86_64-ubuntu24](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nsfwpy-${VERSION}-linux-x86_64-ubuntu24)
           
-          > 💡 **提示**：如果不确定选哪个版本，推荐使用 ubuntu20 版本，兼容性最好
+          > 💡 **提示**：推荐使用 ubuntu22 版本，兼容大多数主流 Linux 发行版
           
           ### Windows x86_64
           - [nsfwpy-${VERSION}-win-x86_64.exe](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nsfwpy-${VERSION}-win-x86_64.exe)
@@ -330,10 +324,10 @@ jobs:
           ### Linux 发行版支持
           | 发行版 | 最低版本 | 推荐下载 |
           |--------|----------|----------|
-          | Ubuntu | 20.04+ | ubuntu20 或 ubuntu22 |
-          | Debian | 10+ | ubuntu20 |
-          | CentOS/RHEL | 8+ | ubuntu20 |
-          | Fedora | 33+ | ubuntu22 |
+          | Ubuntu | 22.04+ | ubuntu22 |
+          | Debian | 11+ | ubuntu22 |
+          | CentOS/RHEL | 9+ | ubuntu22 |
+          | Fedora | 35+ | ubuntu22 |
           | Arch Linux | 最新 | ubuntu24 |
           
           ### Windows
@@ -351,7 +345,6 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            artifacts/nsfwpy-linux-x86_64-ubuntu20/*
             artifacts/nsfwpy-linux-x86_64-ubuntu22/*
             artifacts/nsfwpy-linux-x86_64-ubuntu24/*
             artifacts/nsfwpy-windows-x86_64/*
