@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true  # 启用 Git LFS（虽然 PyPI 包不需要模型文件，但保持一致性）
       
       - name: Set up Python
         uses: actions/setup-python@v5

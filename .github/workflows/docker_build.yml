@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        with:
+          lfs: true  # 启用 Git LFS 以下载模型文件
 
       - name: 设置 QEMU
         uses: docker/setup-qemu-action@v3

@@ -9,11 +9,25 @@ on:
 
 jobs:
   build-linux:
-    name: Build Linux x86_64
-    runs-on: ubuntu-latest
+    name: Build Linux x86_64 (${{ matrix.os-name }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-20.04
+            os-name: "Ubuntu 20.04"
+            os-suffix: "ubuntu20"
+          - os: ubuntu-22.04
+            os-name: "Ubuntu 22.04"
+            os-suffix: "ubuntu22"
+          - os: ubuntu-24.04
+            os-name: "Ubuntu 24.04"
+            os-suffix: "ubuntu24"
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        with:
+          lfs: true  # 启用 Git LFS 以下载模型文件
 
       - name: 安装系统依赖
         run: |
@@ -54,42 +68,53 @@ jobs:
           fi
           
           VERSION="${GITHUB_REF_NAME#v}"
+          OS_SUFFIX="${{ matrix.os-suffix }}"
           if [ "$GITHUB_REF_TYPE" = "tag" ]; then
-            mv "$EXEC_FILE" "nsfwpy-${VERSION}-linux-x86_64"
+            mv "$EXEC_FILE" "nsfwpy-${VERSION}-linux-x86_64-${OS_SUFFIX}"
           else
-            mv "$EXEC_FILE" "nsfwpy-latest-linux-x86_64"
+            mv "$EXEC_FILE" "nsfwpy-latest-linux-x86_64-${OS_SUFFIX}"
           fi
           
           # 添加执行权限
-          chmod +x nsfwpy-*-linux-x86_64
+          chmod +x nsfwpy-*-linux-x86_64-*
+
+      - name: 检查依赖库（调试信息）
+        run: |
+          cd dist
+          EXEC_FILE=$(ls nsfwpy-*-linux-x86_64-*)
+          echo "=== 可执行文件依赖的动态库 ==="
+          ldd "$EXEC_FILE" || true
+          echo ""
+          echo "=== GLIBC 版本要求 ==="
+          objdump -T "$EXEC_FILE" | grep GLIBC | sed 's/.*GLIBC_\([.0-9]*\).*/\1/g' | sort -Vu | tail -1
 
       - name: 生成校验和
         run: |
           cd dist
-          sha256sum nsfwpy-*-linux-x86_64 > nsfwpy-linux-x86_64.sha256
-          cat nsfwpy-linux-x86_64.sha256
+          sha256sum nsfwpy-*-linux-x86_64-* > nsfwpy-linux-x86_64-${{ matrix.os-suffix }}.sha256
+          cat nsfwpy-linux-x86_64-${{ matrix.os-suffix }}.sha256
 
       - name: 生成构建摘要
         run: |
-          echo "## Linux x86_64 构建成功 ✅" >> $GITHUB_STEP_SUMMARY
+          echo "## Linux x86_64 (${{ matrix.os-name }}) 构建成功 ✅" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 文件信息" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          ls -lh dist/nsfwpy-*-linux-x86_64 >> $GITHUB_STEP_SUMMARY
+          ls -lh dist/nsfwpy-*-linux-x86_64-* >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### SHA256 校验和" >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-          cat dist/nsfwpy-linux-x86_64.sha256 >> $GITHUB_STEP_SUMMARY
+          cat dist/nsfwpy-linux-x86_64-${{ matrix.os-suffix }}.sha256 >> $GITHUB_STEP_SUMMARY
           echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
 
       - name: 上传构建产物
         uses: actions/upload-artifact@v4
         with:
-          name: nsfwpy-linux-x86_64
+          name: nsfwpy-linux-x86_64-${{ matrix.os-suffix }}
           path: |
-            dist/nsfwpy-*-linux-x86_64
-            dist/nsfwpy-linux-x86_64.sha256
+            dist/nsfwpy-*-linux-x86_64-*
+            dist/nsfwpy-linux-x86_64-${{ matrix.os-suffix }}.sha256
           retention-days: 7
 
   build-windows:
@@ -98,6 +123,8 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        with:
+          lfs: true  # 启用 Git LFS 以下载模型文件
 
       - name: 安装 uv
         run: |
@@ -195,6 +222,8 @@ jobs:
     steps:
       - name: 检出代码
         uses: actions/checkout@v4
+        with:
+          lfs: true  # 启用 Git LFS 以下载模型文件
 
       - name: 下载所有构建产物
         uses: actions/download-artifact@v4
@@ -215,38 +244,60 @@ jobs:
           cat > release_notes.md << EOF
           # NSFWpy $VERSION
           
-          ## 下载
+          ## 📦 下载
           
           ### Linux x86_64
-          - [nsfwpy-${VERSION}-linux-x86_64](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nsfwpy-${VERSION}-linux-x86_64)
+          
+          根据你的系统选择对应版本：
+          
+          - **Ubuntu 20.04 / Debian 10+** (GLIBC 2.31+)
+            - [nsfwpy-${VERSION}-linux-x86_64-ubuntu20](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nsfwpy-${VERSION}-linux-x86_64-ubuntu20)
+          
+          - **Ubuntu 22.04 / Debian 11+** (GLIBC 2.34+) - 推荐
+            - [nsfwpy-${VERSION}-linux-x86_64-ubuntu22](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nsfwpy-${VERSION}-linux-x86_64-ubuntu22)
+          
+          - **Ubuntu 24.04+** (最新 GLIBC)
+            - [nsfwpy-${VERSION}-linux-x86_64-ubuntu24](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nsfwpy-${VERSION}-linux-x86_64-ubuntu24)
+          
+          > 💡 **提示**：如果不确定选哪个版本，推荐使用 ubuntu20 版本，兼容性最好
           
           ### Windows x86_64
           - [nsfwpy-${VERSION}-win-x86_64.exe](https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/nsfwpy-${VERSION}-win-x86_64.exe)
           
-          ## 校验和
+          ---
+          
+          ## ✅ 校验和
           
           下载后请验证文件完整性：
           
           \`\`\`bash
-          # Linux
-          sha256sum -c nsfwpy-linux-x86_64.sha256
+          # Linux (以 ubuntu22 为例)
+          sha256sum nsfwpy-${VERSION}-linux-x86_64-ubuntu22
           
           # Windows (PowerShell)
           Get-FileHash nsfwpy-${VERSION}-win-x86_64.exe -Algorithm SHA256
           \`\`\`
           
-          ## 安装
+          ## 🚀 安装
           
           ### Linux
           \`\`\`bash
-          chmod +x nsfwpy-${VERSION}-linux-x86_64
-          sudo mv nsfwpy-${VERSION}-linux-x86_64 /usr/local/bin/nsfwpy
+          # 下载后添加执行权限（以 ubuntu22 为例）
+          chmod +x nsfwpy-${VERSION}-linux-x86_64-ubuntu22
+          
+          # 移动到系统路径
+          sudo mv nsfwpy-${VERSION}-linux-x86_64-ubuntu22 /usr/local/bin/nsfwpy
+          
+          # 验证安装
+          nsfwpy --version
           \`\`\`
           
           ### Windows
-          将 \`nsfwpy-${VERSION}-win-x86_64.exe\` 重命名为 \`nsfwpy.exe\` 并添加到 PATH 环境变量
+          1. 下载 \`nsfwpy-${VERSION}-win-x86_64.exe\`
+          2. 重命名为 \`nsfwpy.exe\`
+          3. 添加到 PATH 环境变量
           
-          ## 使用方法
+          ## 📖 使用方法
           
           \`\`\`bash
           # 检测图片
@@ -259,7 +310,35 @@ jobs:
           nsfwpy --web --host 0.0.0.0 --port 8000
           \`\`\`
           
+          ## 🐳 Docker
+          
+          \`\`\`bash
+          docker pull yiminger/nsfwpy:${VERSION}
+          docker run -p 8000:8000 yiminger/nsfwpy:${VERSION}
+          \`\`\`
+          
+          ## 📦 PyPI
+          
+          \`\`\`bash
+          pip install nsfwpy==${VERSION}
+          \`\`\`
+          
           ---
+          
+          ## 🔧 系统兼容性
+          
+          ### Linux 发行版支持
+          | 发行版 | 最低版本 | 推荐下载 |
+          |--------|----------|----------|
+          | Ubuntu | 20.04+ | ubuntu20 或 ubuntu22 |
+          | Debian | 10+ | ubuntu20 |
+          | CentOS/RHEL | 8+ | ubuntu20 |
+          | Fedora | 33+ | ubuntu22 |
+          | Arch Linux | 最新 | ubuntu24 |
+          
+          ### Windows
+          - Windows 10/11 (x64)
+          - Windows Server 2019/2022
           
           EOF
           cat release_notes.md
@@ -272,7 +351,9 @@ jobs:
           draft: false
           prerelease: false
           files: |
-            artifacts/nsfwpy-linux-x86_64/*
+            artifacts/nsfwpy-linux-x86_64-ubuntu20/*
+            artifacts/nsfwpy-linux-x86_64-ubuntu22/*
+            artifacts/nsfwpy-linux-x86_64-ubuntu24/*
             artifacts/nsfwpy-windows-x86_64/*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
