@@ -50,8 +50,9 @@ RUN mkdir -p /app/temp && \
     chown -R appuser:appuser /home/appuser && \
     chown -R appuser:appuser /app
 
-# 复制模型文件
+# 复制模型文件（在切换用户之前复制并设置权限）
 COPY model/ /home/appuser/.cache/nsfwpy/
+RUN chown -R appuser:appuser /home/appuser/.cache/nsfwpy
 
 # 切换到非root用户
 USER appuser
