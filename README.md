@@ -140,7 +140,7 @@ nsfwpy --help
 nsfwpy --help
 
 # 测试图片检测
-nsfwpy --input test.jpg
+nsfwpy test.jpg
 
 # 启动 Web 服务测试
 nsfwpy --web --port 8000
@@ -248,21 +248,22 @@ print(result)
 - 命令行工具
 
     ```bash
-    # 基本用法
+    # 基本用法（直接传路径，或使用 --input）
+    nsfwpy path/to/image.jpg
     nsfwpy --input path/to/image.jpg
 
     # 指定自定义模型路径
-    nsfwpy --model path/to/model.onnx --input path/to/image.jpg
+    nsfwpy --model path/to/model.onnx path/to/image.jpg
 
     # 指定模型类型 (d: 默认模型, m2: mobilenet_v2, i3: inception_v3)
-    nsfwpy --type m2 --input path/to/image.jpg
+    nsfwpy --type m2 path/to/image.jpg
 
     # 启动Web API服务
     nsfwpy -w [--host 127.0.0.1] [--port 8080]
     ```
 
 命令行参数说明：
-- `--input`: 要检测的图像或视频文件路径
+- 文件路径 / `--input`: 要检测的图像或视频文件路径（可选；不传则打印帮助）
 - `--model`: 自定义模型文件路径（指定此参数时将忽略--type）
 - `--type`: 模型类型选择，可选值：d(默认), m2, i3
 - `-w, --web`: 启用Web API服务

@@ -12,7 +12,8 @@ from .nsfw import NSFWDetectorONNX
 def main():
     """命令行工具主函数"""
     parser = argparse.ArgumentParser(description="NSFWpy - 检测图像和视频中的NSFW内容")
-    parser.add_argument("--input", required=True, help="要分析的图像或视频文件路径")
+    parser.add_argument("path", nargs="?", help="要分析的图像或视频文件路径")
+    parser.add_argument("--input", help="要分析的图像或视频文件路径")
     parser.add_argument("-t", "--type", choices=["d", "m2", "i3"], default="d",
                         help="模型类型: d (默认), m2, i3")
     parser.add_argument("-m", "--model", help="自定义模型路径")
@@ -22,10 +23,14 @@ def main():
                         help="最大处理帧数，默认100")
     
     args = parser.parse_args()
+    input_path = args.input or args.path
+    if not input_path:
+        parser.print_help()
+        sys.exit(0)
     
     # 检查文件存在
-    if not os.path.exists(args.input):
-        print(f"错误: 文件不存在: {args.input}")
+    if not os.path.exists(input_path):
+        print(f"错误: 文件不存在: {input_path}")
         sys.exit(1)
     
     try:
@@ -33,15 +38,15 @@ def main():
         detector = NSFWDetectorONNX(model_path=args.model, model_type=args.type)
         
         # 根据文件扩展名决定处理方式
-        file_ext = os.path.splitext(args.input)[1].lower()
+        file_ext = os.path.splitext(input_path)[1].lower()
         video_exts = ['.mp4', '.avi', '.mov', '.mkv', '.wmv', '.flv', '.webm']
         
         if file_ext in video_exts:
             # 处理视频
-            result = detector.predict_video(args.input, args.sample_rate, args.max_frames)
+            result = detector.predict_video(input_path, args.sample_rate, args.max_frames)
         else:
             # 处理图像
-            result = detector.predict_image(args.input)
+            result = detector.predict_image(input_path)
         
         if not result:
             print("处理失败")

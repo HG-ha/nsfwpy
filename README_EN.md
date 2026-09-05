@@ -139,7 +139,7 @@ After installation, verify it works:
 nsfwpy --help
 
 # Test image detection
-nsfwpy --input test.jpg
+nsfwpy test.jpg
 
 # Start Web service test
 nsfwpy --web --port 8000
@@ -246,21 +246,22 @@ print(result)
 - Command Line Tool
 
     ```bash
-    # Basic usage
+    # Basic usage (positional path, or --input)
+    nsfwpy path/to/image.jpg
     nsfwpy --input path/to/image.jpg
 
     # Specify custom model path
-    nsfwpy --model path/to/model.onnx --input path/to/image.jpg
+    nsfwpy --model path/to/model.onnx path/to/image.jpg
 
     # Specify model type (d: default model, m2: mobilenet_v2, i3: inception_v3)
-    nsfwpy --type m2 --input path/to/image.jpg
+    nsfwpy --type m2 path/to/image.jpg
 
     # Start Web API service
     nsfwpy -w [--host 127.0.0.1] [--port 8080]
     ```
 
 Command line arguments:
-- `--input`: Path to image/video file or directory to analyze
+- file path / `--input`: Path to image/video file to analyze (optional; prints help if omitted)
 - `--model`: Custom model file path (--type will be ignored when this is specified)
 - `--type`: Model type selection, options: d(default), m2, i3
 - `-w, --web`: Enable Web API service

@@ -13,6 +13,7 @@ def main():
                        default=os.environ.get('NSFWPY_MODEL_TYPE', 'd'),
                        help='模型类型：d(默认), m2, i3。注意：当指定--model时此参数无效')
     parser.add_argument("-w", "--web", action="store_true", help="启用Web API服务")
+    parser.add_argument("path", nargs="?", help="要检测的图像或视频文件路径")
     parser.add_argument("--input", help="要检测的图像或视频文件路径")
     # 添加视频处理相关参数
     parser.add_argument("-s", "--sample-rate", type=float, default=0.1,
@@ -21,6 +22,7 @@ def main():
                       help="视频最大处理帧数，默认100")
     
     args, unknown_args = parser.parse_known_args()
+    input_path = args.input or args.path
     
     # 如果指定了模型路径，设置环境变量
     if args.model:
@@ -34,6 +36,8 @@ def main():
     if args.web:
         # 启动服务器
         uvicorn.run("nsfwpy.api:app", host=args.host, port=args.port)
+    elif not input_path and not unknown_args:
+        parser.print_help()
     else:
         # 运行命令行版本
         from nsfwpy.cli import main as cli_main
@@ -45,8 +49,8 @@ def main():
             cli_args.extend(["--model", args.model])
         elif args.type:  # 只有在未指定model时才传递type参数
             cli_args.extend(["--type", args.type])
-        if args.input:
-            cli_args.extend(["--input", args.input])
+        if input_path:
+            cli_args.extend(["--input", input_path])
             
         # 添加视频处理相关参数
         if args.sample_rate is not None:
